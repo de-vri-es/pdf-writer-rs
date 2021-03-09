@@ -2,37 +2,14 @@ pub const A4: Size2<Mm> = Size2::new(210.0, 297.0);
 
 pub use euclid;
 
-pub struct Mm {
-	_private: (),
-}
+mod font_spec;
+pub use font_spec::*;
 
-pub struct Pt {
-	_private: (),
-}
+mod text_style;
+pub use text_style::*;
 
-struct PangoUnit {
-	_private: (),
-}
-
-pub const MM_PER_PT: euclid::Scale<f64, Pt, Mm> = euclid::Scale::new(25.4 / 72.0);
-pub const PT_PER_MM: euclid::Scale<f64, Mm, Pt> = euclid::Scale::new(72.0 / 25.4);
-const PANGO_PER_PT: euclid::Scale<f64, Pt, PangoUnit> = euclid::Scale::new(1e3);
-
-pub type Box2<Unit> = euclid::Box2D<f64, Unit>;
-pub type Point2<Unit> = euclid::Point2D<f64, Unit>;
-pub type Size2<Unit> = euclid::Size2D<f64, Unit>;
-pub type Vector2<Unit> = euclid::Vector2D<f64, Unit>;
-pub type Length<Unit> = euclid::Length<f64, Unit>;
-
-/// Create a value in millimeters.
-pub fn mm(value: f64) -> Length<Mm> {
-	Length::new(value)
-}
-
-/// Create a points in points (1/72 inch).
-pub fn pt(value: f64) -> Length<Pt> {
-	Length::new(value)
-}
+mod units;
+pub use units::*;
 
 pub struct PdfWriter {
 	cairo: cairo::Context,
@@ -44,136 +21,6 @@ pub struct Page<'a> {
 	pdf: &'a mut PdfWriter,
 	margins: [Length<Mm>; 4],
 	cursor_y: Length<Mm>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TextStyle<'a> {
-	pub font: FontSpec<'a>,
-	pub align: TextAlign,
-	pub justify: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct FontSpec<'a> {
-	pub family: &'a str,
-	pub size: Length<Pt>,
-	pub weight: FontWeight,
-	pub style: FontStyle,
-}
-
-impl<'a> FontSpec<'a> {
-	pub fn new(family: &'a str, size: Length<Pt>, weight: FontWeight, style: FontStyle) -> Self {
-		Self {
-			family,
-			size,
-			weight,
-			style,
-		}
-	}
-
-	pub fn plain(family: &'a str, size: Length<Pt>) -> Self {
-		Self::new(
-			family,
-			size,
-			FontWeight::Normal,
-			FontStyle::Normal,
-		)
-	}
-
-	pub fn bold(family: &'a str, size: Length<Pt>) -> Self {
-		Self::new(
-			family,
-			size,
-			FontWeight::Bold,
-			FontStyle::Normal,
-		)
-	}
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum FontWeight {
-	Thin,
-	UltraLight,
-	Light,
-	SemiLight,
-	Book,
-	Normal,
-	Medium,
-	SemiBold,
-	Bold,
-	UltraBold,
-	Heavy,
-	UltraHeavy,
-}
-
-impl std::default::Default for FontWeight {
-	fn default() -> Self {
-		Self::Normal
-	}
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum FontStyle {
-	Normal,
-	Oblique,
-	Italic,
-}
-
-impl std::default::Default for FontStyle {
-	fn default() -> Self {
-		Self::Normal
-	}
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum TextAlign {
-	Left,
-	Center,
-	Right,
-}
-
-impl std::default::Default for TextAlign {
-	fn default() -> Self {
-		Self::Left
-	}
-}
-
-#[derive(Debug, Clone)]
-pub struct TextBoxPosition {
-	pub point: Point2<Mm>,
-	pub x_anchor: HorizontalAnchor,
-	pub y_anchor: VerticalAnchor,
-}
-
-impl TextBoxPosition {
-	pub fn new(point: Point2<Mm>, x_anchor: HorizontalAnchor, y_anchor: VerticalAnchor) -> Self {
-		Self { point, x_anchor, y_anchor }
-	}
-
-	pub fn at(point: Point2<Mm>) -> Self {
-		Self::new(point, HorizontalAnchor::Left, VerticalAnchor::Top)
-	}
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum VerticalAnchor {
-	Top,
-	Baseline,
-	Middle,
-	Bottom,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum HorizontalAnchor {
-	Left,
-	Middle,
-	Right,
-}
-
-#[derive(Debug, Clone)]
-pub struct TextExtent {
-	pub absolute: Box2<Mm>,
-	pub logical: Box2<Mm>,
 }
 
 impl PdfWriter {
@@ -218,11 +65,7 @@ impl<'a> Page<'a> {
 	}
 
 	pub fn write_text(&mut self, text: &str, style: &TextStyle) -> Result<(), String> {
-		let position = TextBoxPosition {
-			point: Point2::new(self.margins[3].get(), self.cursor_y.get()),
-			x_anchor: HorizontalAnchor::Left,
-			y_anchor: VerticalAnchor::Top,
-		};
+		let position = BoxPosition::at_xy(self.margins[3], self.cursor_y);
 		let extents = self.draw_text_box(text, style, position, Some(self.text_width()))?;
 
 		self.cursor_y += Length::new(extents.logical.height());
@@ -233,7 +76,7 @@ impl<'a> Page<'a> {
 		&self,
 		text: &str,
 		style: &TextStyle,
-		position: TextBoxPosition,
+		position: BoxPosition,
 		width: Option<Length<Mm>>,
 	) -> Result<TextExtent, String> {
 		self.pdf.load_font(&style.font)
@@ -251,10 +94,10 @@ impl<'a> Page<'a> {
 		let (absolute_extent, logical_extent) = layout.get_extents();
 		let absolute_extent = box_from_pango(absolute_extent) * MM_PER_PT;
 		let logical_extent = box_from_pango(logical_extent) * MM_PER_PT;
-		let baseline = Length::<Pt>::new(f64::from(layout.get_baseline()) / 1e3) * MM_PER_PT;
+		let baseline = Length::<PangoUnit>::new(f64::from(layout.get_baseline())) * PT_PER_PANGO * MM_PER_PT;
 
 		// Compute position offset for rendering the text layout and apply it to the text extents.
-		let position_offset = position.point.to_vector() + position.align_offset(logical_extent.size(), baseline);
+		let position_offset = position.point.to_vector() + position.alignment_offset(logical_extent.size(), baseline);
 		let logical_extent = logical_extent.translate(position_offset);
 		let absolute_extent = absolute_extent.translate(position_offset);
 
@@ -298,96 +141,5 @@ impl<'a> Page<'a> {
 impl<'a> Drop for Page<'a> {
 	fn drop(&mut self) {
 		self.pdf.cairo.show_page();
-	}
-}
-
-fn box_from_pango(rect: pango::Rectangle) -> Box2<Pt> {
-	let position = Point2::new(
-		f64::from(rect.x) / 1e3,
-		f64::from(rect.y) / 1e3,
-	);
-	let size = Size2::new(
-		f64::from(rect.width) / 1e3,
-		f64::from(rect.height) / 1e3,
-	);
-	Box2::new(position, position + size)
-}
-
-
-impl TextStyle<'_> {
-	fn apply_to_layout(&self, layout: &pango::Layout) {
-		let font = self.font.to_pango();
-		layout.set_font_description(Some(&font));
-		layout.set_alignment(self.align.to_pango());
-		layout.set_justify(self.justify);
-	}
-}
-
-impl FontSpec<'_> {
-	fn to_pango(&self) -> pango::FontDescription {
-		let mut font = pango::FontDescription::new();
-		font.set_family(self.family);
-		font.set_weight(self.weight.to_pango());
-		font.set_style(self.style.to_pango());
-		font.set_absolute_size((self.size * PANGO_PER_PT).get());
-		font
-	}
-}
-
-impl FontWeight {
-	fn to_pango(self) -> pango::Weight {
-		match self {
-			Self::Thin => pango::Weight::Thin,
-			Self::UltraLight => pango::Weight::Ultralight,
-			Self::Light => pango::Weight::Light,
-			Self::SemiLight => pango::Weight::Semilight,
-			Self::Book => pango::Weight::Book,
-			Self::Normal => pango::Weight::Normal,
-			Self::Medium => pango::Weight::Medium,
-			Self::SemiBold => pango::Weight::Semibold,
-			Self::Bold => pango::Weight::Bold,
-			Self::UltraBold => pango::Weight::Ultrabold,
-			Self::Heavy => pango::Weight::Heavy,
-			Self::UltraHeavy => pango::Weight::Ultraheavy,
-		}
-	}
-}
-
-impl FontStyle {
-	fn to_pango(self) -> pango::Style {
-		match self {
-			Self::Normal => pango::Style::Normal,
-			Self::Oblique => pango::Style::Oblique,
-			Self::Italic => pango::Style::Italic,
-		}
-	}
-}
-
-impl TextAlign {
-	fn to_pango(self) -> pango::Alignment {
-		match self {
-			Self::Left => pango::Alignment::Left,
-			Self::Center => pango::Alignment::Center,
-			Self::Right => pango::Alignment::Right,
-		}
-	}
-}
-
-impl TextBoxPosition {
-	fn align_offset<Unit>(&self, size: Size2<Unit>, baseline: Length<Unit>) -> Vector2<Unit> {
-		let x = match self.x_anchor {
-			HorizontalAnchor::Left => 0.0,
-			HorizontalAnchor::Middle => size.width * -0.5,
-			HorizontalAnchor::Right => size.width * -1.0,
-		};
-
-		let y = match self.y_anchor {
-			VerticalAnchor::Top => 0.0,
-			VerticalAnchor::Baseline => -baseline.get(),
-			VerticalAnchor::Middle => size.height * -0.5,
-			VerticalAnchor::Bottom => size.height * -1.0,
-		};
-
-		Vector2::new(x, y)
 	}
 }
