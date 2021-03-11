@@ -13,8 +13,8 @@ pub(crate) struct PangoUnit {
 
 pub const MM_PER_PT: euclid::Scale<f64, Pt, Mm> = euclid::Scale::new(25.4 / 72.0);
 pub const PT_PER_MM: euclid::Scale<f64, Mm, Pt> = euclid::Scale::new(72.0 / 25.4);
-pub(crate) const PANGO_PER_PT: euclid::Scale<f64, Pt, PangoUnit> = euclid::Scale::new(1e3);
-pub(crate) const PT_PER_PANGO: euclid::Scale<f64, PangoUnit, Pt> = euclid::Scale::new(1e-3);
+pub(crate) const PANGO_PER_PT: euclid::Scale<f64, Pt, PangoUnit> = euclid::Scale::new(1024.0);
+pub(crate) const PT_PER_PANGO: euclid::Scale<f64, PangoUnit, Pt> = euclid::Scale::new(1.0 / 1024.0);
 
 pub type Box2<Unit> = euclid::Box2D<f64, Unit>;
 pub type Point2<Unit> = euclid::Point2D<f64, Unit>;
