@@ -55,8 +55,9 @@ fn main () {
 		cell("vuur", &plain),
 		cell("gijs", &plain),
 	];
-	let table = Table::new(&writer, page.text_width(), 3, &data[..]).unwrap();
-	table.draw(&page, &BoxPosition::at(page.cursor()));
+	let table = Table::new(&writer, page.text_width(), 3, BoxPosition::at(page.cursor()), &data[..]).unwrap();
+	table.draw(&page);
+	table.draw_horizontal_border(&page, 1, .., pt(0.1));
 
 	page.emit(&writer).unwrap();
 }
