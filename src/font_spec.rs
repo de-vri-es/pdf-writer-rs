@@ -1,15 +1,16 @@
 use crate::{Length, Pt};
 
 #[derive(Debug, Clone)]
-pub struct FontSpec<'a> {
-	pub family: &'a str,
+pub struct FontSpec {
+	pub family: String,
 	pub size: Length<Pt>,
 	pub weight: FontWeight,
 	pub style: FontStyle,
 }
 
-impl<'a> FontSpec<'a> {
-	pub fn new(family: &'a str, size: Length<Pt>, weight: FontWeight, style: FontStyle) -> Self {
+impl FontSpec {
+	pub fn new(family: impl Into<String>, size: Length<Pt>, weight: FontWeight, style: FontStyle) -> Self {
+		let family = family.into();
 		Self {
 			family,
 			size,
@@ -18,7 +19,7 @@ impl<'a> FontSpec<'a> {
 		}
 	}
 
-	pub fn plain(family: &'a str, size: Length<Pt>) -> Self {
+	pub fn plain(family: impl Into<String>, size: Length<Pt>) -> Self {
 		Self::new(
 			family,
 			size,
@@ -27,7 +28,7 @@ impl<'a> FontSpec<'a> {
 		)
 	}
 
-	pub fn bold(family: &'a str, size: Length<Pt>) -> Self {
+	pub fn bold(family: impl Into<String>, size: Length<Pt>) -> Self {
 		Self::new(
 			family,
 			size,
@@ -38,7 +39,7 @@ impl<'a> FontSpec<'a> {
 
 	pub(crate) fn to_pango(&self) -> pango::FontDescription {
 		let mut font = pango::FontDescription::new();
-		font.set_family(self.family);
+		font.set_family(&self.family);
 		font.set_weight(self.weight.to_pango());
 		font.set_style(self.style.to_pango());
 		font.set_absolute_size((self.size * crate::PANGO_PER_PT).get());

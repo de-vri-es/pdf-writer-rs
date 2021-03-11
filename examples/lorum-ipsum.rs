@@ -1,9 +1,9 @@
-use pdf_writer::{PdfWriter, TextStyle, FontSpec, TextAlign, A4, mm, pt};
+use pdf_writer::{BoxPosition, PdfWriter, Table, TextStyle, FontSpec, TextAlign, A4, cell, mm, pt};
 
 fn main () {
 	let file = std::io::BufWriter::new(std::fs::File::create("foo.pdf").unwrap());
 	let margins = [mm(30.0), mm(20.0), mm(30.0), mm(20.0)];
-	let mut writer = PdfWriter::new(file, A4).unwrap();
+	let mut writer = PdfWriter::new(file).unwrap();
 
 	let p1 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 	let p2 = "In semper sapien quis ligula egestas auctor. Nulla eget imperdiet urna. Aliquam viverra, lacus nec egestas pharetra, nulla magna iaculis libero, et suscipit magna tortor et metus. Aliquam erat volutpat. Suspendisse pellentesque ante ut arcu pharetra ultricies. Ut finibus vel nulla ac hendrerit. Morbi non ligula a mauris vulputate pulvinar non ut tortor. Proin elit velit, mollis nec risus at, tincidunt sagittis elit. Maecenas vel faucibus massa, nec consectetur mauris. Sed elementum velit maximus, porta nulla eu, aliquam tellus. Quisque eleifend sem ipsum, ac bibendum turpis venenatis at. Nunc condimentum nibh sit amet eros congue, a ornare odio consequat.";
@@ -17,13 +17,17 @@ fn main () {
 		justify: true,
 	};
 
-	let heading = TextStyle {
-		font: FontSpec::bold("serif", pt(16.0)),
-		align: TextAlign::Left,
-		justify: true,
+	let bold = TextStyle {
+		font: FontSpec::bold("serif", pt(10.0)),
+		.. plain
 	};
 
-	let mut page = writer.page(margins);
+	let heading = TextStyle {
+		font: FontSpec::bold("serif", pt(16.0)),
+		.. plain
+	};
+
+	let mut page = writer.page(A4, margins).unwrap();
 	page.write_text("PDF writer using cairo/pango", &heading).unwrap();
 	page.write_text("", &plain).unwrap();
 	page.write_text(p1, &plain).unwrap();
@@ -35,5 +39,24 @@ fn main () {
 	page.write_text(p4, &plain).unwrap();
 	page.write_text("", &plain).unwrap();
 	page.write_text(p5, &plain).unwrap();
-	page.emit();
+	page.write_text("", &plain).unwrap();
+
+	let data = [
+		cell("een", &bold),
+		cell("twee", &bold),
+		cell("drie", &bold),
+		cell("aap", &plain),
+		cell("noot", &plain),
+		cell("mies", &plain),
+		cell("wim", &plain),
+		cell("zus", &plain),
+		cell("jet", &plain),
+		cell("teun", &plain),
+		cell("vuur", &plain),
+		cell("gijs", &plain),
+	];
+	let table = Table::new(&writer, page.text_width(), 3, &data[..]).unwrap();
+	table.draw(&page, &BoxPosition::at(page.cursor()));
+
+	page.emit(&writer).unwrap();
 }

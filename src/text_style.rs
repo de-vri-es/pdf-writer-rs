@@ -8,13 +8,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct TextStyle<'a> {
-	pub font: FontSpec<'a>,
+pub struct TextStyle {
+	pub font: FontSpec,
 	pub align: TextAlign,
 	pub justify: bool,
 }
 
-impl TextStyle<'_> {
+impl TextStyle {
 	pub(crate) fn apply_to_layout(&self, layout: &pango::Layout) {
 		let font = self.font.to_pango();
 		layout.set_font_description(Some(&font));
