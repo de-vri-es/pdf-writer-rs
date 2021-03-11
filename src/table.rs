@@ -131,8 +131,8 @@ impl Table {
 		};
 
 		let x2 = match columns.end_bound() {
-			std::ops::Bound::Included(&i) => i + 1,
-			std::ops::Bound::Excluded(&i) => i,
+			std::ops::Bound::Included(&i) => i,
+			std::ops::Bound::Excluded(&i) => i - 1,
 			std::ops::Bound::Unbounded => self.columns - 1,
 		};
 		assert!(x1 < self.columns);
