@@ -15,6 +15,8 @@ use crate::{
 
 pub struct Table {
 	columns: usize,
+	column_spacing: Length<Mm>,
+	column_widths: Vec<Length<Mm>>,
 	cells: Vec<TextBox>,
 	size: Size2<Mm>,
 	position: BoxPosition,
@@ -45,6 +47,8 @@ impl Table {
 			return Ok(Self {
 				columns,
 				cells: Vec::new(),
+				column_widths: Vec::new(),
+				column_spacing: mm(0.0),
 				size: Size2::new(0.0, 0.0),
 				position,
 			})
@@ -68,23 +72,21 @@ impl Table {
 		}
 
 		// Divide actual width according to natural width.
-		let widths = divide_width(&natural_widths, width);
-		for (i, cell) in cells.iter_mut().enumerate() {
-			cell.set_width(Some(widths[i % columns]))
-		}
+		let (column_spacing, column_widths) = divide_width(&natural_widths, width);
 
 		// Lay-out all cells in a table grid.
 		let mut cursor: Point2<Mm> = Point2::new(0.0, 0.0);
 		let mut row_height = mm(0.0);
 		for (i, cell) in cells.iter_mut().enumerate() {
+			cell.set_width(Some(column_widths[i % columns]));
 			if i % columns == 0 {
-				cursor.x = 0.0;
+				cursor.x = column_spacing.get();
 				cursor.y += row_height.get();
 				row_height = mm(0.0);
 			}
 			row_height = row_height.max(cell.logical_height());
 			cell.set_position(BoxPosition::at(cursor));
-			cursor.x += widths[i % columns].get();
+			cursor.x += (column_widths[i % columns] + column_spacing * 2.0).get();
 		}
 
 		cursor.y += row_height.get();
@@ -102,6 +104,8 @@ impl Table {
 		Ok(Self {
 			columns,
 			cells,
+			column_widths,
+			column_spacing,
 			size,
 			position,
 		})
@@ -135,7 +139,7 @@ impl Table {
 		assert!(x2 < self.columns);
 
 		let x1 = self.get_column_start(x1);
-		let x2 = self.get_column_start(x2 + 1);
+		let x2 = self.get_column_end(x2);
 
 		let y = y * PT_PER_MM;
 		let x1 = x1 * PT_PER_MM;
@@ -158,13 +162,16 @@ impl Table {
 	}
 
 	fn get_column_start(&self, index: usize) -> Length<Mm> {
-		if index < self.columns {
-			mm(self.cells[index].compute_extents().logical.min.x)
-		} else if index == self.columns {
-			self.get_column_start(0) + mm(self.size.width)
-		} else {
-			panic!("index out of bounds");
-		}
+		assert!(index < self.columns);
+		let offset = self.position.point.to_vector() + self.position.alignment_offset(self.size, mm(0.0));
+
+		let width = self.column_widths[..index].iter().sum::<Length<Mm>>();
+		let spacing = self.column_spacing * (index * 2) as f64;
+		mm(offset.x) + width + spacing
+	}
+
+	fn get_column_end(&self, index: usize) -> Length<Mm> {
+		self.get_column_start(index) + self.column_widths[index] + self.column_spacing * 2.0
 	}
 }
 
@@ -174,7 +181,7 @@ impl<'a> AsRef<TableCell<'a>> for &'_ TableCell<'a> {
 	}
 }
 
-fn divide_width<U>(natural_widths: &[Length<U>], available_width: Length<U>) -> Vec<Length<U>> {
+fn divide_width<U>(natural_widths: &[Length<U>], available_width: Length<U>) -> (Length<U>, Vec<Length<U>>) {
 	let count = natural_widths.len();
 	let total_natural = natural_widths
 		.iter()
@@ -184,7 +191,9 @@ fn divide_width<U>(natural_widths: &[Length<U>], available_width: Length<U>) -> 
 
 	// If we have room to spare, just divide it evenly.
 	if total_natural <= available_width {
-		return vec![fair; count];
+		let excess = available_width - total_natural;
+		let spacing = excess / count as f64 / 2.0;
+		return (spacing, natural_widths.into());
 	}
 
 	let mut dividable = Length::new(0.0); // How much space can we divide over shrunk columns?
@@ -206,5 +215,6 @@ fn divide_width<U>(natural_widths: &[Length<U>], available_width: Length<U>) -> 
 			widths.push(dividable * (natural / total_shrunk))
 		}
 	}
-	widths
+
+	(Length::new(0.0), widths)
 }
