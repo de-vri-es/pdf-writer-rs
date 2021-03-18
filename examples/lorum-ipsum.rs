@@ -15,11 +15,7 @@ fn main () {
 		font: FontSpec::plain("serif", pt(10.0)),
 		align: TextAlign::Left,
 		justify: true,
-	};
-
-	let bold = TextStyle {
-		font: FontSpec::bold("serif", pt(10.0)),
-		.. plain
+		line_height: 1.0,
 	};
 
 	let heading = TextStyle {
@@ -40,6 +36,16 @@ fn main () {
 	page.write_text("", &plain).unwrap();
 	page.write_text(p5, &plain).unwrap();
 	page.write_text("", &plain).unwrap();
+
+	let plain = TextStyle {
+		line_height: 1.1,
+		.. plain
+	};
+
+	let bold = TextStyle {
+		font: FontSpec::bold("serif", pt(10.0)),
+		.. plain
+	};
 
 	let data = [
 		cell("een", &bold),

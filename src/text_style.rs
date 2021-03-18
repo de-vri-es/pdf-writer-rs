@@ -12,6 +12,7 @@ pub struct TextStyle {
 	pub font: FontSpec,
 	pub align: TextAlign,
 	pub justify: bool,
+	pub line_height: f64,
 }
 
 impl TextStyle {
@@ -20,6 +21,9 @@ impl TextStyle {
 		layout.set_font_description(Some(&font));
 		layout.set_alignment(self.align.to_pango());
 		layout.set_justify(self.justify);
+
+		let spacing = self.font.size * (self.line_height - 1.0);
+		layout.set_spacing((spacing * crate::PANGO_PER_PT).get().round() as i32);
 	}
 }
 
