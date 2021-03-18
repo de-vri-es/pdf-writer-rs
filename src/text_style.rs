@@ -71,6 +71,20 @@ impl BoxPosition {
 		Self::at(Point2::new(x.get(), y.get()))
 	}
 
+	pub fn center_horizontally(&self) -> Self {
+		Self {
+			anchor_h: HorizontalAnchor::Middle,
+			..*self
+		}
+	}
+
+	pub fn center_vertically(&self) -> Self {
+		Self {
+			anchor_v: VerticalAnchor::Middle,
+			..*self
+		}
+	}
+
 	pub(crate) fn alignment_offset<Unit>(&self, size: Size2<Unit>, baseline: Length<Unit>) -> Vector2<Unit> {
 		let x = match self.anchor_h {
 			HorizontalAnchor::Left => 0.0,

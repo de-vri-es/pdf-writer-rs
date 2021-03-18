@@ -22,7 +22,7 @@ pub struct PdfWriter {
 pub struct Page {
 	cairo: cairo::Context,
 	size: Size2<Mm>,
-	margins: [Length<Mm>; 4],
+	margins: Margins<Mm>,
 	cursor_y: Length<Mm>,
 }
 
@@ -56,7 +56,7 @@ impl PdfWriter {
 		TextBox::new(&self.cairo, text, style, position, width)
 	}
 
-	pub fn page(&mut self, size: Size2<Mm>, margins: [Length<Mm>; 4]) -> Result<Page, String> {
+	pub fn page(&mut self, size: Size2<Mm>, margins: Margins<Mm>) -> Result<Page, String> {
 		let device_size = size * PT_PER_MM * PANGO_PER_PT;
 		let width = device_size.width.round() as i32;
 		let height = device_size.height.round() as i32;
@@ -66,29 +66,51 @@ impl PdfWriter {
 			.create_similar(cairo::Content::Alpha, width, height)
 			.map_err(|e| format!("failed to create buffer surface for page: {}", e))?;
 		let cairo = cairo::Context::new(&buffer);
+		let cursor_y = margins.top;
 		Ok(Page {
 			cairo,
 			size,
 			margins,
-			cursor_y: margins[0],
+			cursor_y,
 		})
 	}
 }
 
 impl Page {
 	pub fn text_width(&self) -> Length<Mm> {
-		Length::<Mm>::new(self.size.width) - self.margins[1] - self.margins[3]
+		Length::<Mm>::new(self.size.width) - self.margins.left - self.margins.right
 	}
 
 	pub fn cursor(&self) -> Point2<Mm> {
 		Point2::new(
-			self.margins[3].get(),
+			self.margins.left.get(),
+			self.cursor_y.get(),
+		)
+	}
+
+	pub fn line_left(&self) -> Point2<Mm> {
+		Point2::new(
+			self.margins.left.get(),
+			self.cursor_y.get(),
+		)
+	}
+
+	pub fn line_right(&self) -> Point2<Mm> {
+		Point2::new(
+			self.size.width - self.margins.right.get(),
+			self.cursor_y.get(),
+		)
+	}
+
+	pub fn line_center(&self) -> Point2<Mm> {
+		Point2::new(
+			(self.margins.left + self.text_width() * 0.5).get(),
 			self.cursor_y.get(),
 		)
 	}
 
 	pub fn write_text(&mut self, text: &str, style: &TextStyle) -> Result<(), String> {
-		let position = BoxPosition::at_xy(self.margins[3], self.cursor_y);
+		let position = BoxPosition::at_xy(self.margins.left, self.cursor_y);
 		let extents = self.draw_text_box(text, style, position, Some(self.text_width()))?;
 
 		self.cursor_y += Length::new(extents.logical.height());
@@ -229,8 +251,17 @@ impl TextBox {
 
 	/// Draw the text on a page.
 	pub fn draw(&self, page: &Page) -> TextExtent {
-		let extents = self.compute_extents();
-		page.cairo.move_to(extents.logical.min.x * PT_PER_MM.get(), extents.logical.min.y * PT_PER_MM.get());
+		self.draw_offset(page, Vector2::new(0.0, 0.0))
+	}
+
+	/// Draw the text on a page.
+	pub fn draw_offset(&self, page: &Page, offset: Vector2<Mm>) -> TextExtent {
+		let mut extents = self.compute_extents();
+		extents.logical = extents.logical.translate(offset);
+		extents.absolute = extents.absolute.translate(offset);
+
+		let position = extents.logical.min * PT_PER_MM;
+		page.cairo.move_to(position.x, position.y);
 		pangocairo::show_layout(&page.cairo, &self.layout);
 		extents
 	}

@@ -1,8 +1,8 @@
-use pdf_writer::{BoxPosition, PdfWriter, Table, TextStyle, FontSpec, TextAlign, A4, cell, mm, pt};
+use pdf_writer::{BoxPosition, Margins, PdfWriter, TableBuilder, TextStyle, FontSpec, TextAlign, A4, mm, pt};
 
 fn main () {
 	let file = std::io::BufWriter::new(std::fs::File::create("foo.pdf").unwrap());
-	let margins = [mm(30.0), mm(20.0), mm(30.0), mm(20.0)];
+	let margins = Margins::vh(mm(30.0), mm(20.0));
 	let mut writer = PdfWriter::new(file).unwrap();
 
 	let p1 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
@@ -47,21 +47,26 @@ fn main () {
 		.. plain
 	};
 
-	let data = [
-		cell("een", &bold),
-		cell("twee", &bold),
-		cell("drie", &bold),
-		cell("aap", &plain),
-		cell("noot", &plain),
-		cell("mies", &plain),
-		cell("wim", &plain),
-		cell("zus", &plain),
-		cell("jet", &plain),
-		cell("teun", &plain),
-		cell("vuur", &plain),
-		cell("gijs", &plain),
-	];
-	let table = Table::new(&writer, page.text_width(), 3, BoxPosition::at(page.cursor()), &data[..]).unwrap();
+	let mut table = TableBuilder::new(&writer, page.text_width());
+	table.position(BoxPosition::at(page.line_center()).center_horizontally());
+	table.add_column(false, None);
+	table.add_column(false, None);
+	table.add_column(false, None);
+
+	table.add_cell("een", &bold).unwrap();
+	table.add_cell("twee", &bold).unwrap();
+	table.add_cell("drie", &bold).unwrap();
+	table.add_cell("aap", &plain).unwrap();
+	table.add_cell("noot", &plain).unwrap();
+	table.add_cell("mies", &plain).unwrap();
+	table.add_cell("wim", &plain).unwrap();
+	table.add_cell("zus", &plain).unwrap();
+	table.add_cell("jet", &plain).unwrap();
+	table.add_cell("teun", &plain).unwrap();
+	table.add_cell("vuur", &plain).unwrap();
+	table.add_cell("gijs", &plain).unwrap();
+
+	let table = table.build();
 	table.draw(&page);
 	table.draw_horizontal_border(&page, 1, .., pt(0.1));
 
