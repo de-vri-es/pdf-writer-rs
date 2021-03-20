@@ -206,6 +206,14 @@ impl Table {
 		}
 	}
 
+	/// Get the baseline of a table row.
+	///
+	/// The baseline is computed based on the first line of text in the first cell of the row.
+	pub fn baseline(&self, row: usize) -> Length<Mm> {
+		let cell = &self.cells[row * self.columns.len()];
+		mm(cell.text.compute_extents().logical.min.y) + cell.text.baseline()
+	}
+
 	pub fn draw(&self, page: &Page) {
 		for cell in &self.cells {
 			cell.text.draw(page);
@@ -248,7 +256,7 @@ impl Table {
 		page.cairo.restore();
 	}
 
-	fn rows(&self) -> usize {
+	pub fn rows(&self) -> usize {
 		if self.cells.is_empty() {
 			0
 		} else {
