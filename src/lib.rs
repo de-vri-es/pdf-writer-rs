@@ -186,7 +186,9 @@ impl TextBox {
 		let baseline = Length::<PangoUnit>::new(f64::from(self.layout.get_baseline())) * PT_PER_PANGO * MM_PER_PT;
 
 		// Compute position offset for rendering the text layout and apply it to the text extents.
-		let position_offset = self.position.point.to_vector() + self.position.alignment_offset(logical_extent.size(), baseline);
+		let position_offset = self.position.point.to_vector()
+			+ self.position.alignment_offset(logical_extent.size(), baseline)
+			- logical_extent.min.to_vector() * 2.0;
 		let logical_extent = logical_extent.translate(position_offset);
 		let absolute_extent = absolute_extent.translate(position_offset);
 
