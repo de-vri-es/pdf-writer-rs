@@ -48,7 +48,7 @@ fn main () {
 	};
 
 	let mut table = TableBuilder::new(&writer, page.text_width());
-	table.position(BoxPosition::at(page.line_center()).center_horizontally());
+	table.position(BoxPosition::at(page.line_center()).anchor_hcenter());
 	table.add_column(false, None);
 	table.add_column(false, None);
 	table.add_column(false, None);

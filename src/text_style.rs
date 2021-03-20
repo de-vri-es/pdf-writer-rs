@@ -71,14 +71,49 @@ impl BoxPosition {
 		Self::at(Point2::new(x.get(), y.get()))
 	}
 
-	pub fn center_horizontally(&self) -> Self {
+	pub fn anchor_left(&self) -> Self {
+		Self {
+			anchor_h: HorizontalAnchor::Left,
+			..*self
+		}
+	}
+
+	pub fn anchor_right(&self) -> Self {
+		Self {
+			anchor_h: HorizontalAnchor::Right,
+			..*self
+		}
+	}
+
+	pub fn anchor_hcenter(&self) -> Self {
 		Self {
 			anchor_h: HorizontalAnchor::Middle,
 			..*self
 		}
 	}
 
-	pub fn center_vertically(&self) -> Self {
+	pub fn anchor_top(&self) -> Self {
+		Self {
+			anchor_v: VerticalAnchor::Top,
+			..*self
+		}
+	}
+
+	pub fn anchor_bottom(&self) -> Self {
+		Self {
+			anchor_v: VerticalAnchor::Bottom,
+			..*self
+		}
+	}
+
+	pub fn anchor_baseline(&self) -> Self {
+		Self {
+			anchor_v: VerticalAnchor::Baseline,
+			..*self
+		}
+	}
+
+	pub fn anchor_vcenter(&self) -> Self {
 		Self {
 			anchor_v: VerticalAnchor::Middle,
 			..*self

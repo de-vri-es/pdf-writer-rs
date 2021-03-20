@@ -10,6 +10,7 @@ use crate::{
 	Pt,
 	PT_PER_MM,
 	Size2,
+	TextAlign,
 	TextBox,
 	TextStyle,
 	Vector2,
@@ -21,10 +22,15 @@ pub struct Table {
 	position: BoxPosition,
 	cell_padding: Margins<Mm>,
 	columns: Vec<ColumnSpec>,
-	cells: Vec<TextBox>,
+	cells: Vec<TableCell>,
 
 	size: Size2<Mm>,
 	column_widths: Vec<Length<Mm>>,
+}
+
+struct TableCell {
+	text: TextBox,
+	alignment: TextAlign,
 }
 
 pub struct TableBuilder<'a> {
@@ -33,7 +39,7 @@ pub struct TableBuilder<'a> {
 	position: BoxPosition,
 	cell_padding: Margins<Mm>,
 	columns: Vec<ColumnSpec>,
-	cells: Vec<TextBox>,
+	cells: Vec<TableCell>,
 }
 
 impl<'a> TableBuilder<'a> {
@@ -89,8 +95,9 @@ impl<'a> TableBuilder<'a> {
 	///
 	/// Cells must be added in row major order.
 	pub fn add_cell(&mut self, text: &str, style: &TextStyle) -> Result<&mut Self, String> {
+		let alignment = style.align;
 		let text = self.pdf_writer.text_box(text, style, BoxPosition::at_xy(mm(0.0), mm(0.0)), None)?;
-		self.cells.push(text);
+		self.cells.push(TableCell { text, alignment });
 		Ok(self)
 	}
 
@@ -133,7 +140,7 @@ impl Table {
 		let mut natural_widths = vec![mm(0.0); column_count];
 		for (i, cell) in cells.iter().enumerate() {
 			let column = i % column_count;
-			natural_widths[column] = natural_widths[column].max(cell.logical_width() + cell_padding.total_horizontal());
+			natural_widths[column] = natural_widths[column].max(cell.text.logical_width() + cell_padding.total_horizontal());
 		}
 
 		// Divide maximum width according to natural width.
@@ -164,11 +171,16 @@ impl Table {
 			}
 
 			let width = column_widths[column];
-			cell.set_width(Some(width));
+			cell.text.set_width(Some(width));
 
 			let inner_offset = Vector2::new(column_inner_start[column].get(), cell_padding.top.get());
-			row_height = row_height.max(cell.logical_height());
-			cell.set_position(BoxPosition::at(cursor + inner_offset));
+			row_height = row_height.max(cell.text.logical_height());
+			let text_position = match cell.alignment {
+				TextAlign::Left => BoxPosition::at(cursor + inner_offset),
+				TextAlign::Center => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0) * 0.5).anchor_hcenter(),
+				TextAlign::Right => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0)).anchor_right(),
+			};
+			cell.text.set_position(text_position);
 			cursor.x += column_widths[column].get();
 		}
 
@@ -177,11 +189,11 @@ impl Table {
 
 		let baseline = cells
 			.get(0)
-			.map(|text| text.baseline())
+			.map(|cell| cell.text.baseline())
 			.unwrap_or(mm(0.0));
 		let offset = position.point.to_vector() + position.alignment_offset(size, baseline);
 		for cell in &mut cells {
-			cell.position.point += offset;
+			cell.text.position.point += offset;
 		}
 
 		Self {
@@ -196,7 +208,7 @@ impl Table {
 
 	pub fn draw(&self, page: &Page) {
 		for cell in &self.cells {
-			cell.draw(page);
+			cell.text.draw(page);
 		}
 	}
 
@@ -204,7 +216,7 @@ impl Table {
 		let y = if row == self.rows() {
 			mm(self.size.height)
 		} else {
-			mm(self.cells[row * self.columns.len()].position().point.y) - self.cell_padding.top
+			mm(self.cells[row * self.columns.len()].text.position().point.y) - self.cell_padding.top
 		};
 
 		let x1 = match columns.start_bound() {
@@ -294,7 +306,7 @@ fn divide_width<U>(columns: &[ColumnSpec], natural_widths: &[Length<U>], availab
 	}
 
 	let mut widths = Vec::with_capacity(count);
-	for (spec, &natural) in columns.iter().zip(natural_widths) {
+	for &natural in natural_widths {
 		if natural <= fair {
 			widths.push(natural);
 		} else {
