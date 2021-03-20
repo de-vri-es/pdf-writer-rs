@@ -266,6 +266,10 @@ impl Table {
 	fn get_column_end(&self, index: usize) -> Length<Mm> {
 		self.get_column_start(index) + self.column_widths[index]
 	}
+
+	pub fn size(&self) -> Size2<Mm> {
+		self.size
+	}
 }
 
 fn divide_width<U>(columns: &[ColumnSpec], natural_widths: &[Length<U>], available_width: Length<U>) -> Vec<Length<U>> {
