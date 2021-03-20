@@ -84,12 +84,12 @@ pub struct TextExtent {
 
 pub(crate) fn box_from_pango(rect: pango::Rectangle) -> Box2<Pt> {
 	let position = Point2::new(
-		f64::from(rect.x) / 1e3,
-		f64::from(rect.y) / 1e3,
-	);
+		f64::from(rect.x),
+		f64::from(rect.y),
+	) * PT_PER_PANGO;
 	let size = Size2::new(
-		f64::from(rect.width) / 1e3,
-		f64::from(rect.height) / 1e3,
-	);
+		f64::from(rect.width),
+		f64::from(rect.height),
+	) * PT_PER_PANGO;
 	Box2::new(position, position + size)
 }
