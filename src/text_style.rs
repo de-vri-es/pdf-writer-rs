@@ -85,7 +85,7 @@ impl BoxPosition {
 		}
 	}
 
-	pub fn anchor_hcenter(&self) -> Self {
+	pub fn anchor_middle_x(&self) -> Self {
 		Self {
 			anchor_h: HorizontalAnchor::Middle,
 			..*self
@@ -113,7 +113,7 @@ impl BoxPosition {
 		}
 	}
 
-	pub fn anchor_vcenter(&self) -> Self {
+	pub fn anchor_middle_y(&self) -> Self {
 		Self {
 			anchor_v: VerticalAnchor::Middle,
 			..*self

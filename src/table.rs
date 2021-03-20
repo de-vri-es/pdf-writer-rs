@@ -177,7 +177,7 @@ impl Table {
 			row_height = row_height.max(cell.text.logical_height());
 			let text_position = match cell.alignment {
 				TextAlign::Left => BoxPosition::at(cursor + inner_offset),
-				TextAlign::Center => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0) * 0.5).anchor_hcenter(),
+				TextAlign::Center => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0) * 0.5).anchor_middle_x(),
 				TextAlign::Right => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0)).anchor_right(),
 			};
 			cell.text.set_position(text_position);
