@@ -170,15 +170,16 @@ impl Table {
 				row_height = mm(0.0);
 			}
 
-			let width = column_widths[column];
-			cell.text.set_width(Some(width));
+			let outer_width = column_widths[column];
+			let inner_width = outer_width - cell_padding.total_horizontal();
+			cell.text.set_width(Some(inner_width));
 
 			let inner_offset = Vector2::new(column_inner_start[column].get(), cell_padding.top.get());
 			row_height = row_height.max(cell.text.logical_height());
 			let text_position = match cell.alignment {
 				TextAlign::Left => BoxPosition::at(cursor + inner_offset),
-				TextAlign::Center => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0) * 0.5).anchor_middle_x(),
-				TextAlign::Right => BoxPosition::at(cursor + inner_offset + Vector2::new(width.get(), 0.0)).anchor_right(),
+				TextAlign::Center => BoxPosition::at(cursor + inner_offset + Vector2::new(inner_width.get(), 0.0) * 0.5).anchor_middle_x(),
+				TextAlign::Right => BoxPosition::at(cursor + inner_offset + Vector2::new(inner_width.get(), 0.0)).anchor_right(),
 			};
 			cell.text.set_position(text_position);
 			cursor.x += column_widths[column].get();
