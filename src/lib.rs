@@ -1,6 +1,9 @@
 mod geometry;
 pub use geometry::*;
 
+mod drawables;
+pub use drawables::*;
+
 pub trait Drawable {
 	fn draw(&self, surface: &mut Surface, position: Vector2);
 
@@ -25,4 +28,10 @@ pub struct Context {
 
 pub struct Surface {
 	cairo: cairo::Context,
+}
+
+impl Context {
+	pub fn text(&self) -> Text {
+		Text::new(self)
+	}
 }
