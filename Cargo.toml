@@ -5,3 +5,6 @@ authors = ["Maarten de Vries <maarten@de-vri.es>"]
 edition = "2018"
 
 [dependencies]
+cairo-rs = { version = "0.9.1", default-features = false, features = ["pdf"] }
+pango = { version = "0.9.1", default-features = false }
+pangocairo = { version = "0.10.0", default-features = false }
