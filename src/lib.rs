@@ -38,6 +38,23 @@ pub struct Surface {
 }
 
 impl Context {
+	pub fn new() -> Result<Self, String> {
+		let pango = pango::Context::new();
+		let font_map = pangocairo::FontMap::get_default()
+			.ok_or("failed to get default font map")?;
+		pango.set_font_map(&font_map);
+		pango.load_font(&FontSpec::default().to_pango()).unwrap();
+		Ok(Self { pango })
+	}
+
+	pub fn pdf<W: std::io::Write + 'static>(&self, stream: W) -> Result<PdfWriter, String> {
+		PdfWriter::new(stream)
+	}
+
+	pub fn page(&self) -> Page {
+		Page::default()
+	}
+
 	pub fn text(&self) -> Text {
 		Text::new(self)
 	}
