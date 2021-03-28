@@ -55,7 +55,7 @@ impl Context {
 		Page::default()
 	}
 
-	pub fn text(&self) -> Text {
-		Text::new(self)
+	pub fn text_box(&self) -> TextBox {
+		TextBox::new(self)
 	}
 }

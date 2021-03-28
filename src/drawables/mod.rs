@@ -1,2 +1,2 @@
-mod text;
-pub use text::*;
+mod text_box;
+pub use text_box::*;

@@ -1,10 +1,10 @@
 use crate::{Context, Drawable, Length, Surface, Vector2, device_units};
 
-pub struct Text {
+pub struct TextBox {
 	layout: pango::Layout,
 }
 
-impl Text {
+impl TextBox {
 	pub fn new(context: &Context) -> Self {
 		let layout = pango::Layout::new(&context.pango);
 		TextStyle::default().apply_to_layout(&layout);
@@ -152,7 +152,7 @@ impl Text {
 	}
 }
 
-impl Drawable for Text {
+impl Drawable for TextBox {
 	fn draw(&self, surface: &Surface, position: Vector2) {
 		let (_absolute, logical) = self.layout.get_extents();
 		let offset = Vector2::new(device_units(logical.x), device_units(logical.y));
