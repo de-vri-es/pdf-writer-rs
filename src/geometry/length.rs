@@ -59,20 +59,47 @@ impl Length {
 	}
 }
 
-pub const fn mm(value: f64) -> Length {
-	Length::from_mm(value)
+pub trait IntoLength {
+	fn cm(self) -> Length;
+	fn mm(self) -> Length;
+	fn inch(self) -> Length;
+	fn pt(self) -> Length;
 }
 
-pub fn cm(value: f64) -> Length {
-	Length::from_cm(value)
+impl IntoLength for f64 {
+	fn cm(self) -> Length {
+		Length::from_cm(self)
+	}
+
+	fn mm(self) -> Length {
+		Length::from_mm(self)
+	}
+
+	fn inch(self) -> Length {
+		Length::from_inch(self)
+	}
+
+	fn pt(self) -> Length {
+		Length::from_pt(self)
+	}
 }
 
-pub fn pt(value: f64) -> Length {
-	Length::from_pt(value)
-}
+impl IntoLength for i32 {
+	fn cm(self) -> Length {
+		Length::from_cm(self.into())
+	}
 
-pub fn inch(value: f64) -> Length {
-	Length::from_inch(value)
+	fn mm(self) -> Length {
+		Length::from_mm(self.into())
+	}
+
+	fn inch(self) -> Length {
+		Length::from_inch(self.into())
+	}
+
+	fn pt(self) -> Length {
+		Length::from_pt(self.into())
+	}
 }
 
 pub(crate) fn device_units(value: i32) -> Length {
