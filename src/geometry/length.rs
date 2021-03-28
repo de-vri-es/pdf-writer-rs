@@ -79,6 +79,15 @@ pub(crate) fn device_units(value: i32) -> Length {
 	Length::from_device_units(value)
 }
 
+impl std::ops::Neg for Length {
+	type Output = Length;
+
+	#[inline]
+	fn neg(self) -> Self::Output {
+		Length::from_mm(-self.mm)
+	}
+}
+
 impl std::ops::Add for Length {
 	type Output = Length;
 

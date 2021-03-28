@@ -27,6 +27,15 @@ impl Vector2 {
 	}
 }
 
+impl std::ops::Neg for Vector2 {
+	type Output = Vector2;
+
+	#[inline]
+	fn neg(self) -> Self::Output {
+		Vector2::new(-self.x, -self.y)
+	}
+}
+
 impl std::ops::Add for Vector2 {
 	type Output = Vector2;
 
