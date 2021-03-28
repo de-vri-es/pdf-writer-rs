@@ -9,7 +9,7 @@ pub struct Rectangle {
 
 impl Rectangle {
 	#[inline]
-	pub fn from_min_max(min: Vector2, max: Vector2) -> Self {
+	pub const fn from_min_max(min: Vector2, max: Vector2) -> Self {
 		Self { min, max }
 	}
 
@@ -24,12 +24,12 @@ impl Rectangle {
 	}
 
 	#[inline]
-	pub fn min(&self) -> Vector2 {
+	pub const fn min(&self) -> Vector2 {
 		self.min
 	}
 
 	#[inline]
-	pub fn max(&self) -> Vector2 {
+	pub const fn max(&self) -> Vector2 {
 		self.max
 	}
 

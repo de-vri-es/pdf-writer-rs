@@ -14,7 +14,7 @@ impl Length {
 		Self::from_mm(value / 10.0)
 	}
 
-	pub fn from_mm(value: f64) -> Self {
+	pub const fn from_mm(value: f64) -> Self {
 		Self { mm: value }
 	}
 
@@ -38,7 +38,7 @@ impl Length {
 		self.as_mm() * 10.0
 	}
 
-	pub fn as_mm(self) -> f64 {
+	pub const fn as_mm(self) -> f64 {
 		self.mm
 	}
 
@@ -59,7 +59,7 @@ impl Length {
 	}
 }
 
-pub fn mm(value: f64) -> Length {
+pub const fn mm(value: f64) -> Length {
 	Length::from_mm(value)
 }
 

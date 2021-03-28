@@ -8,8 +8,12 @@ pub struct Vector2 {
 }
 
 impl Vector2 {
-	pub fn new(x: Length, y: Length) -> Self {
+	pub const fn new(x: Length, y: Length) -> Self {
 		Self { x, y }
+	}
+
+	pub const fn zero() -> Self {
+		Self::new(Length::from_mm(0.0), Length::from_mm(0.0))
 	}
 
 	pub fn norm_squared(self) -> Length {
