@@ -4,6 +4,11 @@ pub use geometry::*;
 mod drawables;
 pub use drawables::*;
 
+mod pdf;
+pub use pdf::*;
+
+pub const A4: Vector2 = Vector2::new(Length::from_mm(210.0), Length::from_mm(297.0));
+
 pub trait Drawable {
 	fn draw(&self, surface: &Surface, position: Vector2);
 
