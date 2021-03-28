@@ -31,31 +31,47 @@ pub trait Drawable {
 
 pub struct Context {
 	pango: pango::Context,
+	fake_pdf: cairo::PdfSurface,
 }
 
 pub struct Surface {
 	cairo: cairo::Context,
+	size: Vector2,
 }
 
 impl Context {
 	pub fn new() -> Result<Self, String> {
 		let pango = pango::Context::new();
+
 		let font_map = pangocairo::FontMap::get_default()
 			.ok_or("failed to get default font map")?;
 		pango.set_font_map(&font_map);
 		pango.load_font(&FontSpec::default().to_pango()).unwrap();
-		Ok(Self { pango })
+
+		let fake_pdf = cairo::PdfSurface::for_stream(100.0, 100.0, Vec::new())
+			.map_err(|e| format!("failed to create PDF surface: {}", e))?;
+
+		Ok(Self { pango, fake_pdf })
 	}
 
 	pub fn pdf<W: std::io::Write + 'static>(&self, stream: W) -> Result<PdfWriter, String> {
 		PdfWriter::new(stream)
 	}
 
-	pub fn page(&self) -> Page {
-		Page::default()
+	pub fn page(&self) -> Result<Page, String> {
+		Page::new(self)
 	}
 
 	pub fn text_box(&self) -> TextBox {
 		TextBox::new(self)
+	}
+}
+
+impl Surface {
+	fn new(surface: &cairo::Surface, size: Vector2) -> Self {
+		Self {
+			cairo: cairo::Context::new(surface),
+			size,
+		}
 	}
 }
