@@ -7,9 +7,9 @@ pub use drawables::*;
 pub trait Drawable {
 	fn draw(&self, surface: &Surface, position: Vector2);
 
-	fn set_max_width(&mut self, width: Option<Length>) -> &mut Self;
+	fn set_max_width(&mut self, width: Option<Length>);
 
-	fn get_max_width(&self) -> Option<Length>;
+	fn max_width(&self) -> Option<Length>;
 
 	fn compute_size(&self) -> Vector2;
 

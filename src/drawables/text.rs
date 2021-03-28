@@ -11,22 +11,22 @@ impl Text {
 		Self { layout }
 	}
 
-	pub fn set_text(&mut self, text: &str) -> &mut Self {
+	pub fn set_text(self, text: &str) -> Self {
 		self.layout.set_text(text);
 		self
 	}
 
-	pub fn set_style(&mut self, style: &TextStyle) -> &mut Self {
+	pub fn set_style(self, style: &TextStyle) -> Self {
 		style.apply_to_layout(&self.layout);
 		self
 	}
 
-	pub fn set_font(&mut self, font: &FontSpec) -> &mut Self {
+	pub fn set_font(self, font: &FontSpec) -> Self {
 		self.layout.set_font_description(Some(&font.to_pango()));
 		self
 	}
 
-	pub fn set_font_family(&mut self, family: &str) -> &mut Self {
+	pub fn set_font_family(self, family: &str) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
 		font.set_family(family);
@@ -34,7 +34,7 @@ impl Text {
 		self
 	}
 
-	pub fn set_font_size(&mut self, size: Length) -> &mut Self {
+	pub fn set_font_size(self, size: Length) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
 		font.set_absolute_size(size.as_device_units_f64());
@@ -42,7 +42,7 @@ impl Text {
 		self
 	}
 
-	pub fn set_font_weight(&mut self, weight: FontWeight) -> &mut Self {
+	pub fn set_font_weight(self, weight: FontWeight) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
 		font.set_weight(weight.to_pango());
@@ -50,16 +50,16 @@ impl Text {
 		self
 	}
 
-	pub fn make_bold(&mut self) -> &mut Self {
+	pub fn make_bold(self) -> Self {
 		self.set_font_weight(FontWeight::Bold)
 	}
 
 
-	pub fn make_thin(&mut self) -> &mut Self {
+	pub fn make_thin(self) -> Self {
 		self.set_font_weight(FontWeight::Thin)
 	}
 
-	pub fn set_font_style(&mut self, style: FontStyle) -> &mut Self {
+	pub fn set_font_style(self, style: FontStyle) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
 		font.set_style(style.to_pango());
@@ -67,37 +67,37 @@ impl Text {
 		self
 	}
 
-	pub fn make_italic(&mut self) -> &mut Self {
+	pub fn make_italic(self) -> Self {
 		self.set_font_style(FontStyle::Italic)
 	}
 
-	pub fn make_oblique(&mut self) -> &mut Self {
+	pub fn make_oblique(self) -> Self {
 		self.set_font_style(FontStyle::Oblique)
 	}
 
-	pub fn set_alignment(&mut self, alignment: TextAlignment) -> &mut Self {
+	pub fn set_alignment(self, alignment: TextAlignment) -> Self {
 		self.layout.set_alignment(alignment.to_pango());
 		self
 	}
 
-	pub fn align_left(&mut self,) -> &mut Self {
+	pub fn align_left(self,) -> Self {
 		self.set_alignment(TextAlignment::Left)
 	}
 
-	pub fn align_center(&mut self) -> &mut Self {
+	pub fn align_center(self) -> Self {
 		self.set_alignment(TextAlignment::Center)
 	}
 
-	pub fn align_right(&mut self) -> &mut Self {
+	pub fn align_right(self) -> Self {
 		self.set_alignment(TextAlignment::Right)
 	}
 
-	pub fn set_justify(&mut self, justify: bool) -> &mut Self {
+	pub fn set_justify(self, justify: bool) -> Self {
 		self.layout.set_justify(justify);
 		self
 	}
 
-	pub fn set_line_height(&mut self, line_height: f64) -> &mut Self {
+	pub fn set_line_height(self, line_height: f64) -> Self {
 		let font = self.layout.get_font_description().unwrap_or_default();
 		assert!(font.get_size_is_absolute());
 		let size = Length::from_device_units(font.get_size());
@@ -106,16 +106,20 @@ impl Text {
 		self
 	}
 
-	pub fn set_max_width(&mut self, width: Option<Length>) -> &mut Self {
+	pub fn set_max_width(self, width: Option<Length>) -> Self {
+		self._set_max_width(width);
+		self
+	}
+
+	fn _set_max_width(&self, width: Option<Length>) {
 		if let Some(width) = width {
 			self.layout.set_width(width.as_device_units());
 		} else {
 			self.layout.set_width(-1);
 		}
-		self
 	}
 
-	pub fn get_max_width(&self) -> Option<Length> {
+	pub fn max_width(&self) -> Option<Length> {
 		let max_width = self.layout.get_width();
 		if max_width == -1 {
 			None
@@ -146,28 +150,23 @@ impl Text {
 		self.layout.set_width(max_width);
 		natural_width
 	}
+}
 
-	pub fn draw(&self, surface: impl AsRef<Surface>, position: Vector2) {
-		let surface = surface.as_ref();
+impl Drawable for Text {
+	fn draw(&self, surface: &Surface, position: Vector2) {
 		let (_absolute, logical) = self.layout.get_extents();
 		let offset = Vector2::new(device_units(logical.x), device_units(logical.y));
 		let position = position - offset;
 		surface.cairo.move_to(position.x.as_pt(), position.y.as_pt());
 		pangocairo::show_layout(&surface.cairo, &self.layout);
 	}
-}
 
-impl Drawable for Text {
-	fn draw(&self, surface: &Surface, position: Vector2) {
-		self.draw(surface, position);
+	fn set_max_width(&mut self, width: Option<Length>) {
+		self._set_max_width(width);
 	}
 
-	fn set_max_width(&mut self, width: Option<Length>) -> &mut Self {
-		self.set_max_width(width)
-	}
-
-	fn get_max_width(&self) -> Option<Length> {
-		self.get_max_width()
+	fn max_width(&self) -> Option<Length> {
+		self.max_width()
 	}
 
 	fn compute_size(&self) -> Vector2 {
