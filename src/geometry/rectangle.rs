@@ -1,4 +1,4 @@
-use super::{Length, Vector2};
+use super::{Length, Margins, Vector2};
 
 #[repr(C)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
@@ -36,5 +36,17 @@ impl Rectangle {
 	#[inline]
 	pub fn size(&self) -> Vector2 {
 		self.max - self.min
+	}
+
+	pub fn shrink(&self, margins: &Margins) -> Self {
+		let top_left = Vector2::new(margins.left, margins.top);
+		let bottom_right = Vector2::new(margins.right, margins.bottom);
+		Self::from_min_max(self.min() + top_left, self.max() - bottom_right)
+	}
+
+	pub fn grow(&self, margins: &Margins) -> Self {
+		let top_left = Vector2::new(margins.left, margins.top);
+		let bottom_right = Vector2::new(margins.right, margins.bottom);
+		Self::from_min_max(self.min() - top_left, self.max() + bottom_right)
 	}
 }
