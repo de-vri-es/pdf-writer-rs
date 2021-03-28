@@ -124,19 +124,27 @@ impl Text {
 		}
 	}
 
-	pub fn size(&self) -> Vector2 {
+	pub fn compute_size(&self) -> Vector2 {
 		let (_absolute, logical) = self.layout.get_extents();
 		let width = Length::from_device_units(logical.width);
 		let height = Length::from_device_units(logical.height);
 		Vector2::new(width, height)
 	}
 
-	pub fn width(&self) -> Length {
-		self.size().x
+	pub fn compute_width(&self) -> Length {
+		self.compute_size().x
 	}
 
-	pub fn height(&self) -> Length {
-		self.size().y
+	pub fn compute_height(&self) -> Length {
+		self.compute_size().y
+	}
+
+	pub fn compute_natural_width(&self) -> Length {
+		let max_width = self.layout.get_width();
+		self.layout.set_width(-1);
+		let natural_width = self.compute_width();
+		self.layout.set_width(max_width);
+		natural_width
 	}
 
 	pub fn draw(&self, surface: impl AsRef<Surface>, position: Vector2) {
@@ -154,16 +162,20 @@ impl Drawable for Text {
 		self.draw(surface, position);
 	}
 
-	fn set_max_width(&mut self, width: Option<Length>) {
-		self.set_max_width(width);
+	fn set_max_width(&mut self, width: Option<Length>) -> &mut Self {
+		self.set_max_width(width)
 	}
 
 	fn get_max_width(&self) -> Option<Length> {
 		self.get_max_width()
 	}
 
-	fn size(&self) -> Vector2 {
-		self.size()
+	fn compute_size(&self) -> Vector2 {
+		self.compute_size()
+	}
+
+	fn compute_natural_width(&self) -> Length {
+		self.compute_natural_width()
 	}
 }
 
