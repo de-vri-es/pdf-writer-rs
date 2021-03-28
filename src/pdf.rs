@@ -108,19 +108,29 @@ impl Page {
 		self
 	}
 
+	/// Get text area of the page as [`Rectangle`].
+	///
+	/// The text area is the page size minus the page margins.
 	pub fn text_area(&self) -> Rectangle {
 		Rectangle::from_min_max(Vector2::zero(), self.size)
 			.shrink(&self.margins)
 	}
 
+	/// Get the width of the text area.
+	///
+	/// The text area is the page size minus the page margins.
 	pub fn text_width(&self) -> Length {
 		self.size.x - self.margins.total_horizontal()
 	}
 
+	/// Get the height of the text area.
+	///
+	/// The text area is the page size minus the page margins.
 	pub fn text_height(&self) -> Length {
 		self.size.y - self.margins.total_vertical()
 	}
 
+	/// Draw an item on the page.
 	pub fn draw<D: Drawable>(&self, drawable: D, position: Vector2) {
 		drawable.draw(&self.surface, position);
 	}
@@ -141,4 +151,10 @@ fn copy_surface(target: &Surface, source: &Surface) {
 	target.cairo.rectangle(0.0, 0.0, source.size.x.as_pt(), source.size.y.as_pt());
 	target.cairo.fill();
 	target.cairo.restore();
+}
+
+impl AsRef<Surface> for Page {
+	fn as_ref(&self) -> &Surface {
+		self.surface()
+	}
 }

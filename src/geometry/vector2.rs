@@ -1,27 +1,35 @@
 use super::Length;
 
+/// A 2D vector with known unit.
 #[repr(C)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Vector2 {
+	/// The X component.
 	pub x: Length,
+
+	/// The Y component.
 	pub y: Length,
 }
 
 impl Vector2 {
+	/// Create a new vector.
 	pub const fn new(x: Length, y: Length) -> Self {
 		Self { x, y }
 	}
 
+	/// Create a new vector with all-zero components.
 	pub const fn zero() -> Self {
 		Self::new(Length::from_mm(0.0), Length::from_mm(0.0))
 	}
 
+	/// Get the squared L2 norm of the vector.
 	pub fn norm_squared(self) -> Length {
 		let x = self.x.as_mm();
 		let y = self.y.as_mm();
 		Length::from_mm(x*x + y*y)
 	}
 
+	/// Get the L2 norm of the vector.
 	pub fn norm(self) -> Length {
 		Length::from_mm(self.norm_squared().as_mm().sqrt())
 	}

@@ -1,5 +1,8 @@
 use super::Length;
 
+/// Top, bottom, left and right margnins.
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct Margins {
 	pub top: Length,
 	pub bottom: Length,

@@ -3,66 +3,88 @@ const PT_PER_INCH: f64 = 72.0;
 const MM_PER_PT: f64 = MM_PER_INCH / PT_PER_INCH;
 const DEVICE_PER_PT: f64 = 1024.0;
 
+/// A length with known unit.
+///
+/// Internally, all values are stored as millimeters.
 #[repr(transparent)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Length {
 	mm: f64,
 }
 
 impl Length {
+	/// Create a length from a value in centimeters.
 	pub fn from_cm(value: f64) -> Self {
 		Self::from_mm(value / 10.0)
 	}
 
+	/// Create a length from a value in millimeters.
 	pub const fn from_mm(value: f64) -> Self {
 		Self { mm: value }
 	}
 
+	/// Create a length from a value in inch.
 	pub fn from_inch(value: f64) -> Self {
 		Self::from_mm(value * MM_PER_INCH)
 	}
 
+	/// Create a length from a value in points (1/72 inch).
 	pub fn from_pt(value: f64) -> Self {
 		Self::from_mm(value * MM_PER_PT)
 	}
 
+	/// Create a length from cairo/pango device units (1/1024 point).
 	pub(crate) fn from_device_units_f64(value: f64) -> Self {
 		Self::from_pt(value / DEVICE_PER_PT)
 	}
 
+	/// Create a length from cairo/pango device units (1/1024 point).
 	pub(crate) fn from_device_units(value: i32) -> Self {
 		Self::from_device_units_f64(value.into())
 	}
 
+	/// Get the length as [`f64`] in centimeters.
 	pub fn as_cm(self) -> f64 {
 		self.as_mm() * 10.0
 	}
 
+	/// Get the length as [`f64`] in millimeters.
 	pub const fn as_mm(self) -> f64 {
 		self.mm
 	}
 
+	/// Get the length as [`f64`] in inches.
 	pub fn as_inch(self) -> f64 {
 		self.as_mm() / MM_PER_INCH
 	}
 
+	/// Get the length as [`f64`] in points (1/72 inch).
 	pub fn as_pt(self) -> f64 {
 		self.as_mm() / MM_PER_PT
 	}
 
+	/// Get the length as [`f64`] in cairo/pango device units (1/1024 point).
 	pub(crate) fn as_device_units_f64(self) -> f64 {
 		self.as_pt() * DEVICE_PER_PT
 	}
 
+	/// Get the length rounded to the nearest [`i32`] in cairo/pango device units (1/1024 point).
 	pub(crate) fn as_device_units(self) -> i32 {
 		self.as_device_units_f64().round() as i32
 	}
 }
 
 pub trait IntoLength {
+	/// Interpret the value as length in centimeters.
 	fn cm(self) -> Length;
+
+	/// Interpret the value as length in millimeters.
 	fn mm(self) -> Length;
+
+	/// Interpret the value as length in inch.
 	fn inch(self) -> Length;
+
+	/// Interpret the value as length in points (1/72 inch).
 	fn pt(self) -> Length;
 }
 

@@ -1,31 +1,37 @@
 use crate::{Context, Drawable, Length, Surface, Vector2, device_units};
 
+/// A drawable text box.
 pub struct TextBox {
 	layout: pango::Layout,
 }
 
 impl TextBox {
+	/// Create a new text box.
 	pub fn new(context: &Context) -> Self {
 		let layout = pango::Layout::new(&context.pango);
 		TextStyle::default().apply_to_layout(&layout);
 		Self { layout }
 	}
 
+	/// Set the text.
 	pub fn set_text(self, text: &str) -> Self {
 		self.layout.set_text(text);
 		self
 	}
 
+	/// Set the complete text style.
 	pub fn set_style(self, style: &TextStyle) -> Self {
 		style.apply_to_layout(&self.layout);
 		self
 	}
 
+	/// Set the complete font specification.
 	pub fn set_font(self, font: &FontSpec) -> Self {
 		self.layout.set_font_description(Some(&font.to_pango()));
 		self
 	}
 
+	/// Set the font family.
 	pub fn set_font_family(self, family: &str) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
@@ -34,6 +40,7 @@ impl TextBox {
 		self
 	}
 
+	/// Set the font size.
 	pub fn set_font_size(self, size: Length) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
@@ -42,6 +49,7 @@ impl TextBox {
 		self
 	}
 
+	/// Set the font weight.
 	pub fn set_font_weight(self, weight: FontWeight) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
@@ -50,15 +58,17 @@ impl TextBox {
 		self
 	}
 
+	/// Set the font weight to [`FontWeight::Bold`].
 	pub fn make_bold(self) -> Self {
 		self.set_font_weight(FontWeight::Bold)
 	}
 
-
+	/// Set the font weight to [`FontWeight::Thin`].
 	pub fn make_thin(self) -> Self {
 		self.set_font_weight(FontWeight::Thin)
 	}
 
+	/// Set the font style.
 	pub fn set_font_style(self, style: FontStyle) -> Self {
 		// We always set a font, so unwrap should never fail.
 		let mut font = self.layout.get_font_description().unwrap();
@@ -67,36 +77,44 @@ impl TextBox {
 		self
 	}
 
+	/// Set the font style to [`FontStyle::Italic`].
 	pub fn make_italic(self) -> Self {
 		self.set_font_style(FontStyle::Italic)
 	}
 
+	/// Set the font style to [`FontStyle::Oblique`].
 	pub fn make_oblique(self) -> Self {
 		self.set_font_style(FontStyle::Oblique)
 	}
 
+	/// Set the text alignment.
 	pub fn set_alignment(self, alignment: TextAlignment) -> Self {
 		self.layout.set_alignment(alignment.to_pango());
 		self
 	}
 
+	/// Set the text alignment to [`TextAlignment::Left`].
 	pub fn align_left(self,) -> Self {
 		self.set_alignment(TextAlignment::Left)
 	}
 
+	/// Set the text alignment to [`TextAlignment::Center`].
 	pub fn align_center(self) -> Self {
 		self.set_alignment(TextAlignment::Center)
 	}
 
+	/// Set the text alignment to [`TextAlignment::Right`].
 	pub fn align_right(self) -> Self {
 		self.set_alignment(TextAlignment::Right)
 	}
 
+	/// Enable or disable text justification.
 	pub fn set_justify(self, justify: bool) -> Self {
 		self.layout.set_justify(justify);
 		self
 	}
 
+	/// Set the line height relative to the font size.
 	pub fn set_line_height(self, line_height: f64) -> Self {
 		let font = self.layout.get_font_description().unwrap_or_default();
 		assert!(font.get_size_is_absolute());
@@ -106,11 +124,13 @@ impl TextBox {
 		self
 	}
 
+	/// Set the maximum width of the text box.
 	pub fn set_max_width(self, width: Option<Length>) -> Self {
 		self._set_max_width(width);
 		self
 	}
 
+	/// Set the maximum width of the text box.
 	fn _set_max_width(&self, width: Option<Length>) {
 		if let Some(width) = width {
 			self.layout.set_width(width.as_device_units());
@@ -119,6 +139,7 @@ impl TextBox {
 		}
 	}
 
+	/// Get the maximum width of the text box.
 	pub fn max_width(&self) -> Option<Length> {
 		let max_width = self.layout.get_width();
 		if max_width == -1 {
@@ -128,6 +149,7 @@ impl TextBox {
 		}
 	}
 
+	/// Compute the size of the text box based on the current configuration.
 	pub fn compute_size(&self) -> Vector2 {
 		let (_absolute, logical) = self.layout.get_extents();
 		let width = Length::from_device_units(logical.width);
@@ -135,14 +157,19 @@ impl TextBox {
 		Vector2::new(width, height)
 	}
 
+	/// Compute the width of the text box based on the current configuration.
 	pub fn compute_width(&self) -> Length {
 		self.compute_size().x
 	}
 
+	/// Compute the height of the text box based on the current configuration.
 	pub fn compute_height(&self) -> Length {
 		self.compute_size().y
 	}
 
+	/// Compute the natural width of the text.
+	///
+	/// The natural width is the computed width when no limit is applied.
 	pub fn compute_natural_width(&self) -> Length {
 		let max_width = self.layout.get_width();
 		self.layout.set_width(-1);
