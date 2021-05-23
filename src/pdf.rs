@@ -6,9 +6,8 @@ pub struct PdfWriter {
 }
 
 pub struct Page {
-	size: Vector2,
-	margins: Margins,
 	surface: Surface,
+	margins: Margins,
 }
 
 impl PdfWriter {
@@ -23,7 +22,7 @@ impl PdfWriter {
 	}
 
 	pub fn add(&self, page: &Page) -> Result<(), String> {
-		self.pdf.set_size(page.size.x.as_pt(), page.size.y.as_pt())
+		self.pdf.set_size(page.size().x.as_pt(), page.size().y.as_pt())
 			.map_err(|e| format!("failed to set page size: {}", e))?;
 		copy_surface(&self.surface, &page.surface);
 		self.surface.cairo.show_page();
@@ -42,7 +41,6 @@ impl Page {
 		let surface = surface.map_err(|e| format!("failed to create page surface: {}", e))?;
 
 		Ok(Self {
-			size: A4,
 			margins: Margins::vh(30.mm(), 20.mm()),
 			surface: Surface::new(&surface, A4),
 		})
@@ -50,6 +48,10 @@ impl Page {
 
 	pub fn surface(&self) -> &Surface {
 		&self.surface
+	}
+
+	pub fn size(&self) -> Vector2 {
+		self.surface.size
 	}
 
 	pub fn set_size(&mut self, size: Vector2) -> Result<&mut Self, String> {
@@ -112,7 +114,7 @@ impl Page {
 	///
 	/// The text area is the page size minus the page margins.
 	pub fn text_area(&self) -> Rectangle {
-		Rectangle::from_min_max(Vector2::zero(), self.size)
+		Rectangle::from_min_max(Vector2::zero(), self.size())
 			.shrink(&self.margins)
 	}
 
@@ -120,14 +122,14 @@ impl Page {
 	///
 	/// The text area is the page size minus the page margins.
 	pub fn text_width(&self) -> Length {
-		self.size.x - self.margins.total_horizontal()
+		self.size().x - self.margins.total_horizontal()
 	}
 
 	/// Get the height of the text area.
 	///
 	/// The text area is the page size minus the page margins.
 	pub fn text_height(&self) -> Length {
-		self.size.y - self.margins.total_vertical()
+		self.size().y - self.margins.total_vertical()
 	}
 
 	/// Draw an item on the page.
@@ -139,7 +141,7 @@ impl Page {
 	pub fn clear(&self) {
 		self.surface.cairo.save();
 		self.surface.cairo.set_operator(cairo::Operator::Clear);
-		self.surface.cairo.rectangle(0.0, 0.0, self.size.x.as_pt(), self.size.y.as_pt());
+		self.surface.cairo.rectangle(0.0, 0.0, self.size().x.as_pt(), self.size().y.as_pt());
 		self.surface.cairo.paint_with_alpha(1.0);
 		self.surface.cairo.restore();
 	}
