@@ -13,6 +13,11 @@ pub struct Length {
 }
 
 impl Length {
+	/// Create a length of zero.
+	pub const fn zero() -> Self {
+		Self::from_mm(0.0)
+	}
+
 	/// Create a length from a value in centimeters.
 	pub fn from_cm(value: f64) -> Self {
 		Self::from_mm(value / 10.0)

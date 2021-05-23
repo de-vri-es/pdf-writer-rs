@@ -17,8 +17,8 @@ pub trait Drawable {
 	/// Draw the item to a surface at a given position.
 	fn draw(&self, surface: &Surface, position: Vector2);
 
-	/// Set the maximum width of the item.
-	fn set_max_width(&mut self, width: Option<Length>);
+	/// Get the minimum width of the item.
+	fn min_width(&self) -> Length;
 
 	/// Get the maximum width of the item.
 	fn max_width(&self) -> Option<Length>;
@@ -43,10 +43,24 @@ pub trait Drawable {
 		self.compute_size().y
 	}
 
+	/// Compute the distance of the baseline from the top of the drawable.
+	///
+	/// If the drawable has no baseline (because it has no text), this should return None.
+	fn compute_baseline(&self) -> Option<Length>;
+
 	/// Compute the natural width of the item.
 	///
 	/// This is the computed width of the item if no width limit is applied.
 	fn compute_natural_width(&self) -> Length;
+}
+
+/// Drawable item (mutable interface).
+///
+/// All drawables are modeled as items that can be limited at a maximum width.
+/// Items will automatically grow in height as needed, to compensate for lost width.
+pub trait DrawableMut {
+	/// Set the maximum width of the item.
+	fn set_max_width(&mut self, width: Option<Length>);
 }
 
 /// A context to create PDFs.

@@ -1,4 +1,4 @@
-use crate::{Context, Drawable, Length, Surface, Vector2, device_units};
+use crate::{Context, Drawable, DrawableMut, Length, Surface, Vector2, device_units};
 
 /// A drawable text box.
 pub struct TextBox {
@@ -167,6 +167,11 @@ impl TextBox {
 		self.compute_size().y
 	}
 
+	/// Compute the distance of the baseline from the top of the text box.
+	pub fn compute_baseline(&self) -> Length {
+		Length::from_device_units(self.layout.get_baseline())
+	}
+
 	/// Compute the natural width of the text.
 	///
 	/// The natural width is the computed width when no limit is applied.
@@ -188,8 +193,8 @@ impl Drawable for TextBox {
 		pangocairo::show_layout(&surface.cairo, &self.layout);
 	}
 
-	fn set_max_width(&mut self, width: Option<Length>) {
-		self._set_max_width(width);
+	fn min_width(&self) -> Length {
+		Length::zero()
 	}
 
 	fn max_width(&self) -> Option<Length> {
@@ -200,8 +205,19 @@ impl Drawable for TextBox {
 		self.compute_size()
 	}
 
+	fn compute_baseline(&self) -> Option<Length> {
+		Some(self.compute_baseline())
+	}
+
 	fn compute_natural_width(&self) -> Length {
 		self.compute_natural_width()
+	}
+}
+
+impl DrawableMut for TextBox {
+	#[inline]
+	fn set_max_width(&mut self, width: Option<Length>) {
+		self._set_max_width(width);
 	}
 }
 
