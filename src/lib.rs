@@ -52,6 +52,14 @@ pub trait Drawable {
 	///
 	/// This is the computed width of the item if no width limit is applied.
 	fn compute_natural_width(&self) -> Length;
+
+	/// Add a position offset to the the drawable.
+	fn offset(self, offset: Vector2) -> Offset<Self>
+	where
+		Self: Sized
+	{
+		Offset::new(self, offset)
+	}
 }
 
 /// Drawable item (mutable interface).
