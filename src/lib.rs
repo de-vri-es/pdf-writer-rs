@@ -113,6 +113,11 @@ impl Context {
 	pub fn text_box(&self) -> TextBox {
 		TextBox::new(self)
 	}
+
+	/// Create a new item list.
+	pub fn item_list(&self, bullet_font: &FontSpec) -> ItemList {
+		ItemList::new(self, bullet_font)
+	}
 }
 
 impl Surface {
