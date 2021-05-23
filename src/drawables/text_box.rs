@@ -251,6 +251,12 @@ impl DrawableMut for TextBox {
 	}
 }
 
+impl From<TextBox> for Box<dyn DrawableMut> {
+	fn from(other: TextBox) -> Self {
+		Box::new(other)
+	}
+}
+
 #[derive(Debug, Clone)]
 pub struct TextStyle {
 	pub font: FontSpec,

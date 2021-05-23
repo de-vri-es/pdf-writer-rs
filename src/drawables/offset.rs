@@ -199,3 +199,9 @@ impl<T> AsMut<T> for Offset<T> {
 		self.inner_mut()
 	}
 }
+
+impl<T: DrawableMut + Sized + 'static> From<Offset<T>> for Box<dyn DrawableMut> {
+	fn from(other: Offset<T>) -> Self {
+		Box::new(other)
+	}
+}
