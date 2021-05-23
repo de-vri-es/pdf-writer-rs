@@ -130,3 +130,77 @@ impl AsRef<Surface> for Surface {
 		self
 	}
 }
+
+impl<T: Drawable> Drawable for &'_ T {
+	fn draw(&self, surface: &Surface, position: Vector2) {
+		T::draw(self, surface, position)
+	}
+
+	fn min_width(&self) -> Length {
+		T::min_width(self)
+	}
+
+	fn max_width(&self) -> Option<Length> {
+		T::max_width(self)
+	}
+
+	fn compute_size(&self) -> Vector2 {
+		T::compute_size(self)
+	}
+
+	fn compute_width(&self) -> Length {
+		T::compute_width(self)
+	}
+
+	fn compute_height(&self) -> Length {
+		T::compute_height(self)
+	}
+
+	fn compute_baseline(&self) -> Option<Length> {
+		T::compute_baseline(self)
+	}
+
+	fn compute_natural_width(&self) -> Length {
+		T::compute_natural_width(self)
+	}
+}
+
+impl<T: Drawable> Drawable for &'_ mut T {
+	fn draw(&self, surface: &Surface, position: Vector2) {
+		T::draw(self, surface, position)
+	}
+
+	fn min_width(&self) -> Length {
+		T::min_width(self)
+	}
+
+	fn max_width(&self) -> Option<Length> {
+		T::max_width(self)
+	}
+
+	fn compute_size(&self) -> Vector2 {
+		T::compute_size(self)
+	}
+
+	fn compute_width(&self) -> Length {
+		T::compute_width(self)
+	}
+
+	fn compute_height(&self) -> Length {
+		T::compute_height(self)
+	}
+
+	fn compute_baseline(&self) -> Option<Length> {
+		T::compute_baseline(self)
+	}
+
+	fn compute_natural_width(&self) -> Length {
+		T::compute_natural_width(self)
+	}
+}
+
+impl<T: DrawableMut> DrawableMut for &'_ mut T {
+	fn set_max_width(&mut self, width: Option<Length>) {
+		T::set_max_width(self, width)
+	}
+}
