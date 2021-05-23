@@ -230,3 +230,12 @@ impl std::ops::DivAssign<f64> for Length {
 		self.mm /= rhs;
 	}
 }
+
+impl std::ops::Div<Length> for Length {
+	type Output = f64;
+
+	#[inline]
+	fn div(self, rhs: Length) -> Self::Output {
+		self.as_mm() / rhs.as_mm()
+	}
+}
