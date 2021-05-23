@@ -66,7 +66,7 @@ pub trait Drawable {
 ///
 /// All drawables are modeled as items that can be limited at a maximum width.
 /// Items will automatically grow in height as needed, to compensate for lost width.
-pub trait DrawableMut {
+pub trait DrawableMut: Drawable {
 	/// Set the maximum width of the item.
 	fn set_max_width(&mut self, width: Option<Length>);
 }
