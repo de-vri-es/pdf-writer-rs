@@ -77,6 +77,24 @@ impl Length {
 	pub(crate) fn as_device_units(self) -> i32 {
 		self.as_device_units_f64().round() as i32
 	}
+
+	/// Get the lowest value of `self` and `other`.
+	pub fn min(self, other: Self) -> Self {
+		if other < self {
+			other
+		} else {
+			self
+		}
+	}
+
+	/// Get the highest value of `self` and `other`.
+	pub fn max(self, other: Self) -> Self {
+		if other > self {
+			other
+		} else {
+			self
+		}
+	}
 }
 
 pub trait IntoLength {
