@@ -239,3 +239,25 @@ impl std::ops::Div<Length> for Length {
 		self.as_mm() / rhs.as_mm()
 	}
 }
+
+impl std::iter::Sum<Length> for Length {
+	fn sum<I: Iterator<Item = Length>>(iter: I) -> Self
+	{
+		let mut total = Self::zero();
+		for value in iter {
+			total += value;
+		}
+		total
+	}
+}
+
+impl<'a> std::iter::Sum<&'a Length> for Length {
+	fn sum<I: Iterator<Item = &'a Length>>(iter: I) -> Self
+	{
+		let mut total = Self::zero();
+		for value in iter {
+			total += *value;
+		}
+		total
+	}
+}
