@@ -9,6 +9,14 @@ pub use pdf::*;
 
 pub const A4: Vector2 = Vector2::new(Length::from_mm(210.0), Length::from_mm(297.0));
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+struct Color {
+	pub red: u8,
+	pub green: u8,
+	pub blue: u8,
+	pub alpha: u8,
+}
+
 /// Drawable item.
 ///
 /// All drawables are modeled as items that can be limited at a maximum width.
@@ -71,10 +79,25 @@ pub trait DrawableMut: Drawable {
 	fn set_max_width(&mut self, width: Option<Length>);
 }
 
+struct HighlightContext {
+	syntax_set: syntect::parsing::SyntaxSet,
+	themes: syntect::highlighting::ThemeSet,
+}
+
+impl HighlightContext {
+	fn new() -> Self {
+		Self {
+			syntax_set: syntect::parsing::SyntaxSet::load_defaults_newlines(),
+			themes: syntect::highlighting::ThemeSet::load_defaults(),
+		}
+	}
+}
+
 /// A context to create PDFs.
 pub struct Context {
 	pango: pango::Context,
 	fake_pdf: cairo::PdfSurface,
+	highlighting: HighlightContext,
 }
 
 /// A surface to draw [`Drawable`] items on.
@@ -96,7 +119,11 @@ impl Context {
 		let fake_pdf = cairo::PdfSurface::for_stream(100.0, 100.0, Vec::new())
 			.map_err(|e| format!("failed to create PDF surface: {}", e))?;
 
-		Ok(Self { pango, fake_pdf })
+		Ok(Self {
+			pango,
+			fake_pdf,
+			highlighting: HighlightContext::new(),
+		})
 	}
 
 	/// Create a new PDF backed by a [`Write`] stream.

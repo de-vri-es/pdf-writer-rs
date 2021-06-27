@@ -9,3 +9,4 @@ cairo-rs = { version = "0.14.0", default-features = false, features = ["pdf"] }
 image = "0.23.14"
 pango = { version = "0.14.0", default-features = false }
 pangocairo = { version = "0.14.0", default-features = false }
+syntect = "4.5.0"
