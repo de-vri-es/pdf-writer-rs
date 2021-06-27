@@ -25,7 +25,7 @@ impl PdfWriter {
 		self.pdf.set_size(page.size().x.as_pt(), page.size().y.as_pt())
 			.map_err(|e| format!("failed to set page size: {}", e))?;
 		copy_surface(&self.surface, &page.surface);
-		self.surface.cairo.show_page();
+		self.surface.cairo.show_page().unwrap();
 		Ok(())
 	}
 }
@@ -56,7 +56,7 @@ impl Page {
 
 	pub fn set_size(&mut self, size: Vector2) -> Result<&mut Self, String> {
 		let surface = cairo::Surface::create_similar(
-			&self.surface.cairo.get_target(),
+			&self.surface.cairo.target(),
 			cairo::Content::Alpha,
 			size.x.as_device_units(),
 			size.y.as_device_units()
@@ -139,20 +139,20 @@ impl Page {
 
 	/// Clear the page contents.
 	pub fn clear(&self) {
-		self.surface.cairo.save();
+		self.surface.cairo.save().unwrap();
 		self.surface.cairo.set_operator(cairo::Operator::Clear);
 		self.surface.cairo.rectangle(0.0, 0.0, self.size().x.as_pt(), self.size().y.as_pt());
-		self.surface.cairo.paint_with_alpha(1.0);
-		self.surface.cairo.restore();
+		self.surface.cairo.paint_with_alpha(1.0).unwrap();
+		self.surface.cairo.restore().unwrap();
 	}
 }
 
 fn copy_surface(target: &Surface, source: &Surface) {
-	target.cairo.save();
-	target.cairo.set_source_surface(&source.cairo.get_target(), 0.0, 0.0);
+	target.cairo.save().unwrap();
+	target.cairo.set_source_surface(&source.cairo.target(), 0.0, 0.0).unwrap();
 	target.cairo.rectangle(0.0, 0.0, source.size.x.as_pt(), source.size.y.as_pt());
-	target.cairo.fill();
-	target.cairo.restore();
+	target.cairo.fill().unwrap();
+	target.cairo.restore().unwrap();
 }
 
 impl AsRef<Surface> for Page {

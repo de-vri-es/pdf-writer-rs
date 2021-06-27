@@ -39,7 +39,7 @@ impl TextBox {
 	#[inline]
 	pub fn set_font_family(self, family: &str) -> Self {
 		// We always set a font, so unwrap should never fail.
-		let mut font = self.layout.get_font_description().unwrap();
+		let mut font = self.layout.font_description().unwrap();
 		font.set_family(family);
 		self.layout.set_font_description(Some(&font));
 		self
@@ -49,7 +49,7 @@ impl TextBox {
 	#[inline]
 	pub fn set_font_size(self, size: Length) -> Self {
 		// We always set a font, so unwrap should never fail.
-		let mut font = self.layout.get_font_description().unwrap();
+		let mut font = self.layout.font_description().unwrap();
 		font.set_absolute_size(size.as_device_units_f64());
 		self.layout.set_font_description(Some(&font));
 		self
@@ -59,7 +59,7 @@ impl TextBox {
 	#[inline]
 	pub fn set_font_weight(self, weight: FontWeight) -> Self {
 		// We always set a font, so unwrap should never fail.
-		let mut font = self.layout.get_font_description().unwrap();
+		let mut font = self.layout.font_description().unwrap();
 		font.set_weight(weight.to_pango());
 		self.layout.set_font_description(Some(&font));
 		self
@@ -81,7 +81,7 @@ impl TextBox {
 	#[inline]
 	pub fn set_font_style(self, style: FontStyle) -> Self {
 		// We always set a font, so unwrap should never fail.
-		let mut font = self.layout.get_font_description().unwrap();
+		let mut font = self.layout.font_description().unwrap();
 		font.set_style(style.to_pango());
 		self.layout.set_font_description(Some(&font));
 		self
@@ -134,9 +134,9 @@ impl TextBox {
 	/// Set the line height relative to the font size.
 	#[inline]
 	pub fn set_line_height(self, line_height: f64) -> Self {
-		let font = self.layout.get_font_description().unwrap_or_default();
-		assert!(font.get_size_is_absolute());
-		let size = Length::from_device_units(font.get_size());
+		let font = self.layout.font_description().unwrap_or_default();
+		assert!(font.is_size_absolute());
+		let size = Length::from_device_units(font.size());
 		let spacing = size * (line_height - 1.0);
 		self.layout.set_spacing(spacing.as_device_units());
 		self
@@ -162,7 +162,7 @@ impl TextBox {
 	/// Get the maximum width of the text box.
 	#[inline]
 	pub fn max_width(&self) -> Option<Length> {
-		let max_width = self.layout.get_width();
+		let max_width = self.layout.width();
 		if max_width == -1 {
 			None
 		} else {
@@ -173,7 +173,7 @@ impl TextBox {
 	/// Compute the size of the text box based on the current configuration.
 	#[inline]
 	pub fn compute_size(&self) -> Vector2 {
-		let (_absolute, logical) = self.layout.get_extents();
+		let (_absolute, logical) = self.layout.extents();
 		let width = Length::from_device_units(logical.width);
 		let height = Length::from_device_units(logical.height);
 		Vector2::new(width, height)
@@ -194,7 +194,7 @@ impl TextBox {
 	/// Compute the distance of the baseline from the top of the text box.
 	#[inline]
 	pub fn compute_baseline(&self) -> Length {
-		Length::from_device_units(self.layout.get_baseline())
+		Length::from_device_units(self.layout.baseline())
 	}
 
 	/// Compute the natural width of the text.
@@ -202,7 +202,7 @@ impl TextBox {
 	/// The natural width is the computed width when no limit is applied.
 	#[inline]
 	pub fn compute_natural_width(&self) -> Length {
-		let max_width = self.layout.get_width();
+		let max_width = self.layout.width();
 		self.layout.set_width(-1);
 		let natural_width = self.compute_width();
 		self.layout.set_width(max_width);
@@ -212,7 +212,7 @@ impl TextBox {
 
 impl Drawable for TextBox {
 	fn draw(&self, surface: &Surface, position: Vector2) {
-		let (_absolute, logical) = self.layout.get_extents();
+		let (_absolute, logical) = self.layout.extents();
 		let offset = Vector2::new(device_units(logical.x), device_units(logical.y));
 		let position = position - offset;
 		surface.cairo.move_to(position.x.as_pt(), position.y.as_pt());

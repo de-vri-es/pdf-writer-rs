@@ -217,13 +217,13 @@ impl TableLayout {
 		let x1 = self.col_start(x1);
 		let x2 = self.col_end(x2);
 
-		surface.cairo.save();
+		surface.cairo.save().unwrap();
 		surface.cairo.move_to(x1.as_pt(), y.as_pt());
 		surface.cairo.line_to(x2.as_pt(), y.as_pt());
 		surface.cairo.set_line_width(width.as_pt());
-		surface.cairo.set_source(&cairo::SolidPattern::from_rgba(0.0, 0.0, 0.0, 1.0));
-		surface.cairo.stroke();
-		surface.cairo.restore();
+		surface.cairo.set_source(&cairo::SolidPattern::from_rgba(0.0, 0.0, 0.0, 1.0)).unwrap();
+		surface.cairo.stroke().unwrap();
+		surface.cairo.restore().unwrap();
 	}
 
 	pub fn compute_size(&self) -> Vector2 {

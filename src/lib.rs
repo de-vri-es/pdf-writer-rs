@@ -88,7 +88,7 @@ impl Context {
 	pub fn new() -> Result<Self, String> {
 		let pango = pango::Context::new();
 
-		let font_map = pangocairo::FontMap::get_default()
+		let font_map = pangocairo::FontMap::default()
 			.ok_or("failed to get default font map")?;
 		pango.set_font_map(&font_map);
 		pango.load_font(&FontSpec::default().to_pango()).unwrap();
@@ -124,7 +124,7 @@ impl Surface {
 	/// Wrap a cairo surface.
 	fn new(surface: &cairo::Surface, size: Vector2) -> Self {
 		Self {
-			cairo: cairo::Context::new(surface),
+			cairo: cairo::Context::new(surface).unwrap(),
 			size,
 		}
 	}

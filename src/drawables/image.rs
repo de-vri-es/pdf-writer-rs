@@ -63,8 +63,8 @@ impl Image {
 
 	pub fn image_size(&self) -> Vector2 {
 		Vector2::new(
-			Length::from_pt(self.image.get_width().into()),
-			Length::from_pt(self.image.get_height().into()),
+			Length::from_pt(self.image.width().into()),
+			Length::from_pt(self.image.height().into()),
 		)
 	}
 
@@ -92,12 +92,12 @@ impl Image {
 		matrix.scale(image_size.x / target_size.x, image_size.y / target_size.y);
 		matrix.translate(-position.x.as_pt(), -position.y.as_pt());
 
-		surface.cairo.save();
-		surface.cairo.set_source_surface(&self.image, 0.0, 0.0);
-		surface.cairo.get_source().set_matrix(matrix);
+		surface.cairo.save().unwrap();
+		surface.cairo.set_source_surface(&self.image, 0.0, 0.0).unwrap();
+		surface.cairo.source().set_matrix(matrix);
 		surface.cairo.rectangle(position.x.as_pt(), position.y.as_pt(), target_size.x.as_pt(), target_size.y.as_pt());
-		surface.cairo.fill();
-		surface.cairo.restore();
+		surface.cairo.fill().unwrap();
+		surface.cairo.restore().unwrap();
 	}
 }
 
@@ -127,7 +127,7 @@ impl Drawable for Image {
 
 	#[inline]
 	fn compute_natural_width(&self) -> Length {
-		Length::from_pt(self.image.get_width().into())
+		Length::from_pt(self.image.width().into())
 	}
 }
 
