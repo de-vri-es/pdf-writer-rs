@@ -1,3 +1,6 @@
+mod image;
+pub use self::image::*;
+
 mod item_list;
 pub use item_list::*;
 
