@@ -10,7 +10,7 @@ pub use pdf::*;
 pub const A4: Vector2 = Vector2::new(Length::from_mm(210.0), Length::from_mm(297.0));
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-struct Color {
+pub struct Color {
 	pub red: u8,
 	pub green: u8,
 	pub blue: u8,
@@ -79,17 +79,39 @@ pub trait DrawableMut: Drawable {
 	fn set_max_width(&mut self, width: Option<Length>);
 }
 
-struct HighlightContext {
+pub struct HighlightContext {
 	syntax_set: syntect::parsing::SyntaxSet,
 	themes: syntect::highlighting::ThemeSet,
+	default_theme: String,
 }
 
 impl HighlightContext {
 	fn new() -> Self {
+		let syntax_set = syntect::parsing::SyntaxSet::load_defaults_newlines();
+		let themes = syntect::highlighting::ThemeSet::load_defaults();
+		let default_theme = themes.themes.keys().next().unwrap().clone();
 		Self {
-			syntax_set: syntect::parsing::SyntaxSet::load_defaults_newlines(),
-			themes: syntect::highlighting::ThemeSet::load_defaults(),
+			syntax_set,
+			themes,
+			default_theme,
 		}
+	}
+
+	pub fn load_themes(&mut self, directory: impl AsRef<std::path::Path>) -> Result<(), String> {
+		self.themes.add_from_folder(directory).map_err(|e| e.to_string())
+	}
+
+	pub fn set_default_theme(&mut self, theme: &str) -> Result<(), String> {
+		if self.themes.themes.get(theme).is_some() {
+			self.default_theme = theme.to_string();
+			Ok(())
+		} else {
+			Err(format!("unknown theme: {}", theme))
+		}
+	}
+
+	pub fn themes(&self) -> impl Iterator<Item = &str> {
+		self.themes.themes.keys().map(|x| x.as_str())
 	}
 }
 
@@ -124,6 +146,14 @@ impl Context {
 			fake_pdf,
 			highlighting: HighlightContext::new(),
 		})
+	}
+
+	pub fn highlighting(&self) -> &HighlightContext {
+		&self.highlighting
+	}
+
+	pub fn highlighting_mut(&mut self) -> &mut HighlightContext {
+		&mut self.highlighting
 	}
 
 	/// Create a new PDF backed by a [`Write`] stream.

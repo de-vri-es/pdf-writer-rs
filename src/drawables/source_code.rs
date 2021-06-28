@@ -1,10 +1,66 @@
-use crate::{Drawable, DrawableMut, Length, Surface, Vector2};
+use crate::{Color, Drawable, DrawableMut, Length, Surface, Vector2};
 
-pub struct SourceCode {
+pub struct SourceCode<'a> {
+	context: &'a crate::Context,
+	code: &'a str,
+	syntax: &'a syntect::parsing::SyntaxReference,
+	theme: &'a syntect::highlighting::Theme,
+	font: crate::FontSpec,
+	background: Option<Color>,
+	foreground: Option<Color>,
+}
+
+impl<'a> SourceCode<'a> {
+	pub fn new(context: &'a crate::Context, languague: &str) -> Result<Self, String> {
+		let syntax = context.highlighting.syntax_set.find_syntax_by_token(languague)
+			.ok_or_else(|| format!("unknown language: {}", languague))?;
+		Ok(Self {
+			context,
+			code: "",
+			syntax,
+			theme: context.highlighting.themes.themes.get(&context.highlighting.default_theme).unwrap(),
+			font: crate::FontSpec::plain("monospace", Length::from_pt(10.0)),
+			background: None,
+			foreground: None,
+		})
+	}
+
+	pub fn set_code(&mut self, code: &'a str) -> &mut Self {
+		self.code = code;
+		self
+	}
+
+	pub fn set_theme(&mut self, theme: &str) -> Result<&mut Self, String> {
+		self.theme = self.context.highlighting.themes.themes
+			.get(theme)
+			.ok_or_else(|| format!("unknown highlighting theme: {}", theme))?;
+		Ok(self)
+	}
+
+	pub fn set_font(&mut self, font: crate::FontSpec) -> &mut Self {
+		self.font = font;
+		self
+	}
+
+	pub fn set_text_color(&mut self, color: impl Into<Option<Color>>) -> &mut Self {
+		self.foreground = color.into();
+		self
+	}
+
+	pub fn set_background_color(&mut self, color: impl Into<Option<Color>>) -> &mut Self {
+		self.background = color.into();
+		self
+	}
+
+	pub fn highlight(&self) -> HighlightedSourceCode {
+		HighlightedSourceCode::new(self)
+	}
+}
+
+pub struct HighlightedSourceCode {
 	lines: Vec<SourceCodeLine>,
 	max_width: Option<Length>,
 	size_info: SourceCodeSizeInfo,
-	font_spec: crate::FontSpec,
 	background: Option<crate::Color>,
 	foreground: Option<crate::Color>,
 	line_nr_background: Option<crate::Color>,
@@ -23,57 +79,24 @@ struct SourceCodeLine {
 	source: pango::Layout,
 }
 
-impl SourceCode {
-	pub fn new(context: &crate::Context, syntax: &syntect::parsing::SyntaxReference, theme: &syntect::highlighting::Theme, source_code: &str) -> Result<Self, String> {
-		let font_spec = crate::FontSpec::plain("monospace", Length::from_pt(10.0));
+impl HighlightedSourceCode {
+	pub fn new(source: &SourceCode) -> Self {
+		let pango_font = source.font.to_pango();
 
-		let mut highlighter = syntect::easy::HighlightLines::new(syntax, theme);
+		let mut highlighter = syntect::easy::HighlightLines::new(source.syntax, source.theme);
 		let mut lines = Vec::new();
-		for (line_nr, line) in syntect::util::LinesWithEndings::from(source_code).enumerate() {
-			let ranges = highlighter.highlight(line, &context.highlighting.syntax_set);
-			let source_attrs = pango::AttrList::new();
-			let mut start_index = 0;
-			for (style, text) in ranges {
-				if style.font_style.contains(syntect::highlighting::FontStyle::BOLD) {
-					source_attrs.change(set_attr_span(pango::Attribute::new_weight(pango::Weight::Bold), start_index, text.len()))
-				}
-				if style.font_style.contains(syntect::highlighting::FontStyle::ITALIC) {
-					source_attrs.change(set_attr_span(pango::Attribute::new_style(pango::Style::Italic), start_index, text.len()))
-				}
-				if style.font_style.contains(syntect::highlighting::FontStyle::UNDERLINE) {
-					source_attrs.change(set_attr_span(pango::Attribute::new_underline(pango::Underline::Single), start_index, text.len()))
-				}
+		for (line_nr, line) in syntect::util::LinesWithEndings::from(source.code).enumerate() {
+			let line_nr_layout = pango::Layout::new(&source.context.pango);
+			line_nr_layout.set_font_description(Some(&pango_font));
+			line_nr_layout.set_text(&format!("{} ", line_nr));
 
-				if theme.settings.background.map(|x| x != style.background).unwrap_or(true) {
-					let syntect::highlighting::Color{r, g, b, a} = style.background;
-					source_attrs.change(set_attr_span(pango::Attribute::new_background(r as u16 * 257, g as u16 * 257, b as u16 * 257), start_index, text.len()));
-					if a != 255 {
-						source_attrs.change(set_attr_span(pango::Attribute::new_background_alpha(a as u16 * 257), start_index, text.len()));
-					}
-				}
-
-				if theme.settings.foreground.map(|x| x != style.foreground).unwrap_or(true) {
-					let syntect::highlighting::Color{r, g, b, a} = style.foreground;
-					source_attrs.change(set_attr_span(pango::Attribute::new_foreground(r as u16 * 257, g as u16 * 257, b as u16 * 257), start_index, text.len()));
-					if a != 255 {
-						source_attrs.change(set_attr_span(pango::Attribute::new_foreground_alpha(a as u16 * 257), start_index, text.len()));
-					}
-				}
-
-				start_index += text.len();
-			}
-
-			let font = font_spec.to_pango();
-
-			let line_nr_layout = pango::Layout::new(&context.pango);
-			line_nr_layout.set_font_description(Some(&font));
-			line_nr_layout.set_text(&format!("{}", line_nr));
-
-			let source_layout = pango::Layout::new(&context.pango);
-			source_layout.set_font_description(Some(&font));
+			let ranges = highlighter.highlight(line, &source.context.highlighting.syntax_set);
+			let source_attrs = highlights_to_attrs(&ranges, source.theme);
+			let source_layout = pango::Layout::new(&source.context.pango);
+			source_layout.set_font_description(Some(&pango_font));
 			source_layout.set_text(line.strip_suffix('\n').unwrap_or(line));
 			source_layout.set_attributes(Some(&source_attrs));
-			source_layout.set_indent(-(font_spec.size * 2.0).as_device_units());
+			source_layout.set_indent(-(source.font.size * 2.0).as_device_units());
 
 			lines.push(SourceCodeLine {
 				line_nr: line_nr_layout,
@@ -82,21 +105,20 @@ impl SourceCode {
 		}
 
 		let size_info = SourceCodeSizeInfo::compute(&lines);
-		let background = theme.settings.background.map(crate::Color::from);
-		let foreground = theme.settings.foreground.map(crate::Color::from);
-		let line_nr_background = theme.settings.gutter.map(crate::Color::from);
-		let line_nr_foreground = theme.settings.gutter_foreground.map(crate::Color::from);
+		let background = source.background.or_else(|| source.theme.settings.background.map(crate::Color::from));
+		let foreground = source.foreground.or_else(|| source.theme.settings.foreground.map(crate::Color::from));
+		let line_nr_background = source.theme.settings.gutter.map(crate::Color::from);
+		let line_nr_foreground = source.theme.settings.gutter_foreground.map(crate::Color::from);
 
-		Ok(Self {
+		Self {
 			max_width: None,
 			lines,
 			size_info,
-			font_spec,
 			background,
 			foreground,
 			line_nr_background,
 			line_nr_foreground,
-		})
+		}
 	}
 
 	pub fn set_max_width(mut self, max_width: impl Into<Option<Length>>) -> Self {
@@ -116,7 +138,7 @@ impl SourceCode {
 				}
 			},
 			Some(max_width) => {
-				let source_width = max_width - self.size_info.line_nr_width - self.font_spec.size;
+				let source_width = max_width - self.size_info.line_nr_width;
 				for line in &self.lines {
 					line.source.set_width(source_width.as_device_units());
 				}
@@ -139,11 +161,11 @@ impl SourceCode {
 	}
 
 	pub fn compute_natural_width(&self) -> Length {
-		self.size_info.line_nr_width + self.size_info.natural_source_width + self.font_spec.size
+		self.size_info.line_nr_width + self.size_info.natural_source_width
 	}
 
 	pub fn compute_size(&self) -> Vector2 {
-		let width = self.size_info.line_nr_width + self.size_info.source_width + self.font_spec.size;
+		let width = self.size_info.line_nr_width + self.size_info.source_width;
 		Vector2::new(width, self.size_info.height)
 	}
 
@@ -151,7 +173,7 @@ impl SourceCode {
 		if let Some(bg) = &self.line_nr_background {
 			surface.cairo.save().unwrap();
 			surface.cairo.set_source_rgba(bg.red as f64 / 255.0, bg.green as f64 / 255.0, bg.blue as f64 / 255.0, bg.alpha as f64 / 255.0);
-			surface.cairo.rectangle(position.x.as_pt(), position.y.as_pt(), (self.size_info.line_nr_width + 0.5 * self.font_spec.size).as_pt(), self.size_info.height.as_pt());
+			surface.cairo.rectangle(position.x.as_pt(), position.y.as_pt(), self.size_info.line_nr_width.as_pt(), self.size_info.height.as_pt());
 			surface.cairo.fill().unwrap();
 			surface.cairo.restore().unwrap();
 		}
@@ -160,9 +182,9 @@ impl SourceCode {
 			surface.cairo.save().unwrap();
 			surface.cairo.set_source_rgba(bg.red as f64 / 255.0, bg.green as f64 / 255.0, bg.blue as f64 / 255.0, bg.alpha as f64 / 255.0);
 			surface.cairo.rectangle(
-				(position.x + self.size_info.line_nr_width + 0.5 * self.font_spec.size).as_pt() - 1.0,
+				(position.x + self.size_info.line_nr_width).as_pt() - 1.0,
 				position.y.as_pt(),
-				(self.size_info.source_width + 0.5 * self.font_spec.size).as_pt() + 1.0,
+				(self.size_info.source_width).as_pt() + 1.0,
 				self.size_info.height.as_pt()
 			);
 			surface.cairo.fill().unwrap();
@@ -185,7 +207,7 @@ impl SourceCode {
 			if let Some(fg) = &self.foreground {
 				surface.cairo.set_source_rgba(fg.red as f64 / 255.0, fg.green as f64 / 255.0, fg.blue as f64 / 255.0, fg.alpha as f64 / 255.0);
 			}
-			let x = x + Length::from_device_units(line_nr_extents.width) + self.font_spec.size;
+			let x = x + Length::from_device_units(line_nr_extents.width);
 			surface.cairo.move_to(x.as_pt(), y.as_pt());
 			pangocairo::show_layout(&surface.cairo, &line.source);
 
@@ -223,13 +245,48 @@ impl SourceCodeSizeInfo {
 	}
 }
 
+fn highlights_to_attrs(ranges: &[(syntect::highlighting::Style, &str)], theme: &syntect::highlighting::Theme) -> pango::AttrList {
+	let source_attrs = pango::AttrList::new();
+	let mut start_index = 0;
+	for (style, text) in ranges {
+		if style.font_style.contains(syntect::highlighting::FontStyle::BOLD) {
+			source_attrs.change(set_attr_span(pango::Attribute::new_weight(pango::Weight::Bold), start_index, text.len()))
+		}
+		if style.font_style.contains(syntect::highlighting::FontStyle::ITALIC) {
+			source_attrs.change(set_attr_span(pango::Attribute::new_style(pango::Style::Italic), start_index, text.len()))
+		}
+		if style.font_style.contains(syntect::highlighting::FontStyle::UNDERLINE) {
+			source_attrs.change(set_attr_span(pango::Attribute::new_underline(pango::Underline::Single), start_index, text.len()))
+		}
+
+		if theme.settings.background.map(|x| x != style.background).unwrap_or(true) {
+			let syntect::highlighting::Color{r, g, b, a} = style.background;
+			source_attrs.change(set_attr_span(pango::Attribute::new_background(r as u16 * 257, g as u16 * 257, b as u16 * 257), start_index, text.len()));
+			if a != 255 {
+				source_attrs.change(set_attr_span(pango::Attribute::new_background_alpha(a as u16 * 257), start_index, text.len()));
+			}
+		}
+
+		if theme.settings.foreground.map(|x| x != style.foreground).unwrap_or(true) {
+			let syntect::highlighting::Color{r, g, b, a} = style.foreground;
+			source_attrs.change(set_attr_span(pango::Attribute::new_foreground(r as u16 * 257, g as u16 * 257, b as u16 * 257), start_index, text.len()));
+			if a != 255 {
+				source_attrs.change(set_attr_span(pango::Attribute::new_foreground_alpha(a as u16 * 257), start_index, text.len()));
+			}
+		}
+
+		start_index += text.len();
+	}
+	source_attrs
+}
+
 fn set_attr_span(mut attribute: pango::Attribute, start_index: usize, length: usize) -> pango::Attribute {
 	attribute.set_start_index(start_index as u32);
 	attribute.set_end_index(start_index as u32 + length as u32);
 	attribute
 }
 
-impl Drawable for SourceCode {
+impl Drawable for HighlightedSourceCode {
 	fn draw(&self, surface: &Surface, position: Vector2) {
 		self.draw(surface, position)
 	}
@@ -238,7 +295,7 @@ impl Drawable for SourceCode {
 		if self.lines.is_empty() {
 			Length::zero()
 		} else {
-			self.size_info.line_nr_width + self.font_spec.size + Length::from_cm(1.0)
+			self.size_info.line_nr_width + Length::from_cm(1.0)
 		}
 	}
 
@@ -267,7 +324,7 @@ impl Drawable for SourceCode {
 	}
 }
 
-impl DrawableMut for SourceCode {
+impl DrawableMut for HighlightedSourceCode {
 	#[inline]
 	fn set_max_width(&mut self, width: Option<Length>) {
 		self._set_max_width(width);
