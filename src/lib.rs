@@ -17,6 +17,33 @@ pub struct Color {
 	pub alpha: u8,
 }
 
+impl Color {
+	pub fn rgba(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
+		Self { red, green, blue, alpha }
+	}
+
+	pub fn rgb(red: u8, green: u8, blue: u8) -> Self {
+		Self::rgba(red, green, blue, 255)
+	}
+
+	pub fn black() -> Self {
+		Self::rgb(0, 0, 0)
+	}
+
+	pub fn white() -> Self {
+		Self::rgb(255, 255, 255)
+	}
+
+	fn set_as_source(&self, context: &cairo::Context) {
+		context.set_source_rgba(
+			self.red as f64 / 255.0,
+			self.green as f64 / 255.0,
+			self.blue as f64 / 255.0,
+			self.alpha as f64 / 255.0,
+		);
+	}
+}
+
 /// Drawable item.
 ///
 /// All drawables are modeled as items that can be limited at a maximum width.
@@ -189,7 +216,7 @@ impl Surface {
 	pub fn fill(&self, color: &Color) {
 		self.cairo.save().unwrap();
 		self.cairo.rectangle(0.0, 0.0, self.size.x.as_pt() , self.size.y.as_pt());
-		self.cairo.set_source_rgba(color.red as f64 / 255.0, color.green as f64 / 255.0, color.blue as f64 / 255.0, color.alpha as f64 / 255.0);
+		color.set_as_source(&self.cairo);
 		self.cairo.fill().unwrap();
 		self.cairo.restore().unwrap();
 	}

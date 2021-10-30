@@ -1,8 +1,9 @@
-use crate::{Context, Drawable, DrawableMut, Length, Surface, Vector2, device_units};
+use crate::{Color, Context, Drawable, DrawableMut, Length, Surface, Vector2, device_units};
 
 /// A drawable text box.
 pub struct TextBox {
 	layout: pango::Layout,
+	color: Color,
 }
 
 impl TextBox {
@@ -11,13 +12,21 @@ impl TextBox {
 	pub fn new(context: &Context) -> Self {
 		let layout = pango::Layout::new(&context.pango);
 		TextStyle::default().apply_to_layout(&layout);
-		Self { layout }
+		let color = Color::black();
+		Self { layout, color }
 	}
 
 	/// Set the text.
 	#[inline]
 	pub fn set_text(self, text: &str) -> Self {
 		self.layout.set_text(text);
+		self
+	}
+
+	/// Set the text color.
+	#[inline]
+	pub fn set_color(mut self, color: Color) -> Self {
+		self.color = color;
 		self
 	}
 
@@ -215,8 +224,11 @@ impl Drawable for TextBox {
 		let (_absolute, logical) = self.layout.extents();
 		let offset = Vector2::new(device_units(logical.x), device_units(logical.y));
 		let position = position - offset;
+		surface.cairo.save().unwrap();
+		self.color.set_as_source(&surface.cairo);
 		surface.cairo.move_to(position.x.as_pt(), position.y.as_pt());
 		pangocairo::show_layout(&surface.cairo, &self.layout);
+		surface.cairo.restore().unwrap();
 	}
 
 	fn min_width(&self) -> Length {

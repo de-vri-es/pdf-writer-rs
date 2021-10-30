@@ -172,7 +172,7 @@ impl HighlightedSourceCode {
 	fn draw(&self, surface: &Surface, position: Vector2) {
 		if let Some(bg) = &self.line_nr_background {
 			surface.cairo.save().unwrap();
-			surface.cairo.set_source_rgba(bg.red as f64 / 255.0, bg.green as f64 / 255.0, bg.blue as f64 / 255.0, bg.alpha as f64 / 255.0);
+			bg.set_as_source(&surface.cairo);
 			surface.cairo.rectangle(position.x.as_pt(), position.y.as_pt(), self.size_info.line_nr_width.as_pt(), self.size_info.height.as_pt());
 			surface.cairo.fill().unwrap();
 			surface.cairo.restore().unwrap();
@@ -180,7 +180,7 @@ impl HighlightedSourceCode {
 
 		if let Some(bg) = &self.background {
 			surface.cairo.save().unwrap();
-			surface.cairo.set_source_rgba(bg.red as f64 / 255.0, bg.green as f64 / 255.0, bg.blue as f64 / 255.0, bg.alpha as f64 / 255.0);
+			bg.set_as_source(&surface.cairo);
 			surface.cairo.rectangle(
 				(position.x + self.size_info.line_nr_width).as_pt() - 1.0,
 				position.y.as_pt(),
