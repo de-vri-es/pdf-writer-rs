@@ -185,6 +185,14 @@ impl Surface {
 			size,
 		}
 	}
+
+	pub fn fill(&self, color: &Color) {
+		self.cairo.save().unwrap();
+		self.cairo.rectangle(0.0, 0.0, self.size.x.as_pt() , self.size.y.as_pt());
+		self.cairo.set_source_rgba(color.red as f64 / 255.0, color.green as f64 / 255.0, color.blue as f64 / 255.0, color.alpha as f64 / 255.0);
+		self.cairo.fill().unwrap();
+		self.cairo.restore().unwrap();
+	}
 }
 
 impl AsRef<Surface> for Surface {
