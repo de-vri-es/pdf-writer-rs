@@ -54,7 +54,7 @@ impl Page {
 		self.surface.size
 	}
 
-	pub fn set_size(&mut self, size: Vector2) -> Result<&mut Self, String> {
+	pub fn set_size(mut self, size: Vector2) -> Result<Self, String> {
 		let surface = cairo::Surface::create_similar(
 			&self.surface.cairo.target(),
 			cairo::Content::Alpha,
@@ -69,42 +69,42 @@ impl Page {
 		Ok(self)
 	}
 
-	pub fn set_size_a4(&mut self) -> Result<&mut Self, String> {
+	pub fn set_size_a4(self) -> Result<Self, String> {
 		self.set_size(A4)
 	}
 
-	pub fn set_margins(&mut self, margins: Margins) -> &mut Self {
+	pub fn set_margins(mut self, margins: Margins) -> Self {
 		self.margins = margins;
 		self
 	}
 
-	pub fn set_top_margin(&mut self, value: Length) -> &mut Self {
+	pub fn set_top_margin(mut self, value: Length) -> Self {
 		self.margins.top = value;
 		self
 	}
 
-	pub fn set_bottom_margin(&mut self, value: Length) -> &mut Self {
+	pub fn set_bottom_margin(mut self, value: Length) -> Self {
 		self.margins.bottom = value;
 		self
 	}
 
-	pub fn set_left_margin(&mut self, value: Length) -> &mut Self {
+	pub fn set_left_margin(mut self, value: Length) -> Self {
 		self.margins.left = value;
 		self
 	}
 
-	pub fn set_right_margin(&mut self, value: Length) -> &mut Self {
+	pub fn set_right_margin(mut self, value: Length) -> Self {
 		self.margins.right = value;
 		self
 	}
 
-	pub fn set_vertical_margins(&mut self, value: Length) -> &mut Self {
+	pub fn set_vertical_margins(mut self, value: Length) -> Self {
 		self.margins.top = value;
 		self.margins.bottom = value;
 		self
 	}
 
-	pub fn set_horizontal_margins(&mut self, value: Length) -> &mut Self {
+	pub fn set_horizontal_margins(mut self, value: Length) -> Self {
 		self.margins.left = value;
 		self.margins.right = value;
 		self

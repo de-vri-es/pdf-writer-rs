@@ -66,67 +66,67 @@ impl<T> Offset<T> {
 	}
 
 	/// Change the configured position offset.
-	pub fn set_offset(&mut self, offset: Vector2) -> &mut Self {
+	pub fn set_offset(mut self, offset: Vector2) -> Self {
 		self.offset = offset;
 		self
 	}
 
 	/// Add a vector to the current position offset.
-	pub fn add_offset(&mut self, offset: Vector2) -> &mut Self {
+	pub fn add_offset(mut self, offset: Vector2) -> Self {
 		self.offset += offset;
 		self
 	}
 
 	/// Subtract a vector from the current position offset.
-	pub fn sub_offset(&mut self, offset: Vector2) -> &mut Self {
+	pub fn sub_offset(mut self, offset: Vector2) -> Self {
 		self.offset -= offset;
 		self
 	}
 
 	/// Change the X anchor of the wrapped drawable.
-	pub fn set_anchor_x(&mut self, anchor_x: AnchorX) -> &mut Self {
+	pub fn set_anchor_x(mut self, anchor_x: AnchorX) -> Self {
 		self.anchor_x = anchor_x;
 		self
 	}
 
 	/// Change the Y anchor of the wrapped drawable.
-	pub fn set_anchor_y(&mut self, anchor_y: AnchorY) -> &mut Self {
+	pub fn set_anchor_y(mut self, anchor_y: AnchorY) -> Self {
 		self.anchor_y = anchor_y;
 		self
 	}
 
 	/// Anchor the wrapped drawable on the left.
-	pub fn anchor_left(&mut self) -> &mut Self {
+	pub fn anchor_left(self) -> Self {
 		self.set_anchor_x(AnchorX::Left)
 	}
 
 	/// Anchor the wrapped drawable on the center in X direction.
-	pub fn anchor_center_x(&mut self) -> &mut Self {
+	pub fn anchor_center_x(self) -> Self {
 		self.set_anchor_x(AnchorX::Center)
 	}
 
 	/// Anchor the wrapped drawable on the right.
-	pub fn anchor_right(&mut self) -> &mut Self {
+	pub fn anchor_right(self) -> Self {
 		self.set_anchor_x(AnchorX::Right)
 	}
 
 	/// Anchor the wrapped drawable on the top.
-	pub fn anchor_top(&mut self) -> &mut Self {
+	pub fn anchor_top(self) -> Self {
 		self.set_anchor_y(AnchorY::Top)
 	}
 
 	/// Anchor the wrapped drawable on the baseline.
-	pub fn anchor_baseline(&mut self) -> &mut Self {
+	pub fn anchor_baseline(self) -> Self {
 		self.set_anchor_y(AnchorY::Baseline)
 	}
 
 	/// Anchor the wrapped drawable on the center in Y direction.
-	pub fn anchor_center_y(&mut self) -> &mut Self {
+	pub fn anchor_center_y(self) -> Self {
 		self.set_anchor_y(AnchorY::Center)
 	}
 
 	/// Anchor the wrapped drawable on the bottom.
-	pub fn anchor_bottom(&mut self) -> &mut Self {
+	pub fn anchor_bottom(self) -> Self {
 		self.set_anchor_y(AnchorY::Bottom)
 	}
 }

@@ -176,8 +176,14 @@ impl TableLayout {
 			let mut with_offset = crate::Offset::new(&cell.text, Vector2::new(padding.left, padding.top));
 			match cell.alignment {
 				TextAlignment::Left => (),
-				TextAlignment::Right => with_offset.anchor_right().offset_mut().x += self.column_widths[i % column_count],
-				TextAlignment::Center => with_offset.anchor_center_x().offset_mut().x += 0.5 * self.column_widths[i % column_count],
+				TextAlignment::Right => {
+					with_offset = with_offset.anchor_right();
+					with_offset.offset_mut().x += self.column_widths[i % column_count];
+				},
+				TextAlignment::Center => {
+					with_offset = with_offset.anchor_center_x();
+					with_offset.offset_mut().x += 0.5 * self.column_widths[i % column_count];
+				}
 			};
 			with_offset.draw(surface, cursor);
 			if (i + 1) % column_count == 0 {

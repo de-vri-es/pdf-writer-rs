@@ -24,8 +24,9 @@ fn main () {
 		.. plain
 	};
 
-	let mut page = context.page().unwrap();
-	page.set_size_a4().unwrap().set_margins(margins);
+	let page = context.page().unwrap()
+		.set_size_a4().unwrap()
+		.set_margins(margins);
 	let mut cursor = page.text_area().min();
 	let text1 = context
 		.text_box()

@@ -25,29 +25,29 @@ impl<'a> SourceCode<'a> {
 		})
 	}
 
-	pub fn set_code(&mut self, code: &'a str) -> &mut Self {
+	pub fn set_code(mut self, code: &'a str) -> Self {
 		self.code = code;
 		self
 	}
 
-	pub fn set_theme(&mut self, theme: &str) -> Result<&mut Self, String> {
+	pub fn set_theme(mut self, theme: &str) -> Result<Self, String> {
 		self.theme = self.context.highlighting.themes.themes
 			.get(theme)
 			.ok_or_else(|| format!("unknown highlighting theme: {}", theme))?;
 		Ok(self)
 	}
 
-	pub fn set_font(&mut self, font: crate::FontSpec) -> &mut Self {
+	pub fn set_font(mut self, font: crate::FontSpec) -> Self {
 		self.font = font;
 		self
 	}
 
-	pub fn set_text_color(&mut self, color: impl Into<Option<Color>>) -> &mut Self {
+	pub fn set_text_color(mut self, color: impl Into<Option<Color>>) -> Self {
 		self.foreground = color.into();
 		self
 	}
 
-	pub fn set_background_color(&mut self, color: impl Into<Option<Color>>) -> &mut Self {
+	pub fn set_background_color(mut self, color: impl Into<Option<Color>>) -> Self {
 		self.background = color.into();
 		self
 	}
